@@ -186,7 +186,7 @@ void updateAlgorithmDemo(AlgorithmDemoState& state) {
     }
 }
 
-void renderAlgorithmDemo(const AlgorithmDemoState& state, int screenWidth, int screenHeight) {
+void renderAlgorithmDemo(const AlgorithmDemoState& state, int screenWidth, int screenHeight, bool uiVisible) {
     BeginDrawing();
     ClearBackground(BLACK);
 
@@ -417,83 +417,87 @@ void renderAlgorithmDemo(const AlgorithmDemoState& state, int screenWidth, int s
         }
 
         // Draw info about approximations being used
-        DrawText(TextFormat("Cells approximated: %d", cellsUsed), screenWidth - 250, 20, 14, GREEN);
-        DrawText(TextFormat("Cells subdivided: %d", cellsSubdivided), screenWidth - 250, 40, 14, ORANGE);
+        if (uiVisible) {
+            DrawText(TextFormat("Cells approximated: %d", cellsUsed), screenWidth - 250, 20, 14, GREEN);
+            DrawText(TextFormat("Cells subdivided: %d", cellsSubdivided), screenWidth - 250, 40, 14, ORANGE);
+        }
     }
 
     EndMode3D();
 
     // === UI OVERLAY ===
-    const char* modeNames[] = {
-        "MODE 1: BRUTE FORCE O(n²)",
-        "MODE 2: OCTREE CONSTRUCTION",
-        "MODE 3: OCTREE STRUCTURE",
-        "MODE 4: BARNES-HUT O(n log n)"
-    };
+    if (uiVisible) {
+        const char* modeNames[] = {
+            "MODE 1: BRUTE FORCE O(n²)",
+            "MODE 2: OCTREE CONSTRUCTION",
+            "MODE 3: OCTREE STRUCTURE",
+            "MODE 4: BARNES-HUT O(n log n)"
+        };
 
-    // Top info panel - larger and more detailed
-    DrawRectangle(0, 0, screenWidth, 280, ColorAlpha(BLACK, 0.85f));
-    DrawText("ALGORITHM VISUAL WALKTHROUGH", 20, 10, 26, WHITE);
-    DrawText(modeNames[state.mode], 20, 45, 20, YELLOW);
-    DrawText(TextFormat("Particles: %d", (int)state.particles.size()), 20, 75, 16, LIGHTGRAY);
+        // Top info panel - larger and more detailed
+        DrawRectangle(0, 0, screenWidth, 280, ColorAlpha(BLACK, 0.85f));
+        DrawText("ALGORITHM VISUAL WALKTHROUGH", 20, 10, 26, WHITE);
+        DrawText(modeNames[state.mode], 20, 45, 20, YELLOW);
+        DrawText(TextFormat("Particles: %d", (int)state.particles.size()), 20, 75, 16, LIGHTGRAY);
 
-    // Mode-specific detailed explanations
-    if (state.mode == DEMO_BRUTE_FORCE) {
-        int totalCalcs = (state.particles.size() * (state.particles.size() - 1)) / 2;
-        DrawText(TextFormat("Total Calculations: %d (every particle pair!)", totalCalcs), 20, 105, 18, ORANGE);
-        DrawText(TextFormat("Current: Computing forces for particle %d/%d", state.currentStep + 1, (int)state.particles.size()), 20, 130, 16, SKYBLUE);
+        // Mode-specific detailed explanations
+        if (state.mode == DEMO_BRUTE_FORCE) {
+            int totalCalcs = (state.particles.size() * (state.particles.size() - 1)) / 2;
+            DrawText(TextFormat("Total Calculations: %d (every particle pair!)", totalCalcs), 20, 105, 18, ORANGE);
+            DrawText(TextFormat("Current: Computing forces for particle %d/%d", state.currentStep + 1, (int)state.particles.size()), 20, 130, 16, SKYBLUE);
 
-        DrawText("HOW IT WORKS:", 20, 160, 16, WHITE);
-        DrawText("• Each particle must calculate force from EVERY other particle", 20, 180, 14, GRAY);
-        DrawText("• Complexity: O(n²) - doubles particles = 4x computation!", 20, 200, 14, GRAY);
-        DrawText("• Blue lines show forces being calculated for current particle", 20, 220, 14, SKYBLUE);
-        DrawText("• Gray lines show all other particle pairs", 20, 240, 14, GRAY);
-        DrawText("• Press SPACE to step through each particle", 20, 260, 13, GREEN);
+            DrawText("HOW IT WORKS:", 20, 160, 16, WHITE);
+            DrawText("• Each particle must calculate force from EVERY other particle", 20, 180, 14, GRAY);
+            DrawText("• Complexity: O(n²) - doubles particles = 4x computation!", 20, 200, 14, GRAY);
+            DrawText("• Blue lines show forces being calculated for current particle", 20, 220, 14, SKYBLUE);
+            DrawText("• Gray lines show all other particle pairs", 20, 240, 14, GRAY);
+            DrawText("• Press SPACE to step through each particle", 20, 260, 13, GREEN);
+        }
+        else if (state.mode == DEMO_OCTREE_BUILD) {
+            DrawText(TextFormat("Build Step: %d/3", std::min(state.currentStep, 2) + 1), 20, 105, 18, ORANGE);
+
+            DrawText("HOW IT WORKS:", 20, 135, 16, WHITE);
+            DrawText("• Step 1: Create root bounding box (WHITE) containing all particles", 20, 155, 14, GRAY);
+            DrawText("• Step 2: Subdivide into 8 children (GREEN) - octree gets its name here!", 20, 175, 14, GRAY);
+            DrawText("• Step 3: Further subdivide cells with particles (ORANGE leaf cells)", 20, 195, 14, GRAY);
+            DrawText("• Each cell stores total mass & center of mass of particles inside", 20, 215, 14, GRAY);
+            DrawText("• This spatial organization enables fast approximations", 20, 235, 14, GRAY);
+            DrawText("• Press SPACE to see each subdivision step", 20, 255, 13, GREEN);
+        }
+        else if (state.mode == DEMO_OCTREE_STRUCTURE) {
+            DrawText("Complete Hierarchical Tree", 20, 105, 18, ORANGE);
+
+            DrawText("HOW IT WORKS:", 20, 135, 16, WHITE);
+            DrawText("• WHITE box: Root - represents entire simulation space", 20, 155, 14, WHITE);
+            DrawText("• GREEN boxes: Level 1 - 8 subdivisions of root", 20, 175, 14, GREEN);
+            DrawText("• ORANGE boxes: Level 2 - final leaf cells containing particles", 20, 195, 14, ORANGE);
+            DrawText("• RED dots: Center of mass for each cell (used in approximation)", 20, 215, 14, RED);
+            DrawText("• Far particles grouped together → treated as single mass point", 20, 235, 14, GRAY);
+            DrawText("• This hierarchy reduces computation from O(n²) to O(n log n)", 20, 255, 14, GRAY);
+        }
+        else if (state.mode == DEMO_BARNES_HUT_CALC) {
+            DrawText(TextFormat("Computing forces for particle: %d/%d", state.currentParticle + 1, (int)state.particles.size()),
+                     20, 105, 18, ORANGE);
+            DrawText(TextFormat("Theta: %.2f (adjust with +/-)", state.theta), 20, 130, 16, LIGHTGRAY);
+
+            DrawText("HOW IT WORKS (THE KEY DIFFERENCE):", 20, 160, 16, WHITE);
+            DrawText("• Instead of computing with every particle (brute force)...", 20, 180, 14, GRAY);
+            DrawText("• Barnes-Hut uses CELLS to approximate groups of distant particles!", 20, 200, 14, GRAY);
+            DrawText("• GREEN cells/spheres: Far enough → treat entire cell as ONE point", 20, 220, 14, GREEN);
+            DrawText("• ORANGE boxes: Too close → must subdivide to get better detail", 20, 240, 14, ORANGE);
+            DrawText("• YELLOW: Individual particles computed exactly (can't approximate)", 20, 260, 14, YELLOW);
+        }
+
+        // Controls overlay (bottom)
+        DrawRectangle(0, screenHeight - 150, screenWidth, 150, ColorAlpha(BLACK, 0.7f));
+        DrawText("CONTROLS:", 20, screenHeight - 140, 18, WHITE);
+        DrawText("1: Brute Force | 2: Build Tree | 3: Tree Structure | 4: Barnes-Hut", 20, screenHeight - 115, 14, GRAY);
+        DrawText("SPACE: Next Step | R: Reset | +/-: Adjust Theta", 20, screenHeight - 95, 14, GRAY);
+        DrawText("Left Click: Rotate | Middle Click: Pan | Wheel: Zoom", 20, screenHeight - 75, 14, GRAY);
+        DrawText("H: Hide UI | Q: Return to Menu | ESC: Exit Program", 20, screenHeight - 55, 14, GRAY);
+
+        DrawText(TextFormat("FPS: %d", GetFPS()), screenWidth - 100, 20, 18, GREEN);
     }
-    else if (state.mode == DEMO_OCTREE_BUILD) {
-        DrawText(TextFormat("Build Step: %d/3", std::min(state.currentStep, 2) + 1), 20, 105, 18, ORANGE);
-
-        DrawText("HOW IT WORKS:", 20, 135, 16, WHITE);
-        DrawText("• Step 1: Create root bounding box (WHITE) containing all particles", 20, 155, 14, GRAY);
-        DrawText("• Step 2: Subdivide into 8 children (GREEN) - octree gets its name here!", 20, 175, 14, GRAY);
-        DrawText("• Step 3: Further subdivide cells with particles (ORANGE leaf cells)", 20, 195, 14, GRAY);
-        DrawText("• Each cell stores total mass & center of mass of particles inside", 20, 215, 14, GRAY);
-        DrawText("• This spatial organization enables fast approximations", 20, 235, 14, GRAY);
-        DrawText("• Press SPACE to see each subdivision step", 20, 255, 13, GREEN);
-    }
-    else if (state.mode == DEMO_OCTREE_STRUCTURE) {
-        DrawText("Complete Hierarchical Tree", 20, 105, 18, ORANGE);
-
-        DrawText("HOW IT WORKS:", 20, 135, 16, WHITE);
-        DrawText("• WHITE box: Root - represents entire simulation space", 20, 155, 14, WHITE);
-        DrawText("• GREEN boxes: Level 1 - 8 subdivisions of root", 20, 175, 14, GREEN);
-        DrawText("• ORANGE boxes: Level 2 - final leaf cells containing particles", 20, 195, 14, ORANGE);
-        DrawText("• RED dots: Center of mass for each cell (used in approximation)", 20, 215, 14, RED);
-        DrawText("• Far particles grouped together → treated as single mass point", 20, 235, 14, GRAY);
-        DrawText("• This hierarchy reduces computation from O(n²) to O(n log n)", 20, 255, 14, GRAY);
-    }
-    else if (state.mode == DEMO_BARNES_HUT_CALC) {
-        DrawText(TextFormat("Computing forces for particle: %d/%d", state.currentParticle + 1, (int)state.particles.size()),
-                 20, 105, 18, ORANGE);
-        DrawText(TextFormat("Theta: %.2f (adjust with +/-)", state.theta), 20, 130, 16, LIGHTGRAY);
-
-        DrawText("HOW IT WORKS (THE KEY DIFFERENCE):", 20, 160, 16, WHITE);
-        DrawText("• Instead of computing with every particle (brute force)...", 20, 180, 14, GRAY);
-        DrawText("• Barnes-Hut uses CELLS to approximate groups of distant particles!", 20, 200, 14, GRAY);
-        DrawText("• GREEN cells/spheres: Far enough → treat entire cell as ONE point", 20, 220, 14, GREEN);
-        DrawText("• ORANGE boxes: Too close → must subdivide to get better detail", 20, 240, 14, ORANGE);
-        DrawText("• YELLOW: Individual particles computed exactly (can't approximate)", 20, 260, 14, YELLOW);
-    }
-
-    // Controls overlay (bottom)
-    DrawRectangle(0, screenHeight - 150, screenWidth, 150, ColorAlpha(BLACK, 0.7f));
-    DrawText("CONTROLS:", 20, screenHeight - 140, 18, WHITE);
-    DrawText("1: Brute Force | 2: Build Tree | 3: Tree Structure | 4: Barnes-Hut", 20, screenHeight - 115, 14, GRAY);
-    DrawText("SPACE: Next Step | R: Reset | +/-: Adjust Theta", 20, screenHeight - 95, 14, GRAY);
-    DrawText("Left Click: Rotate | Middle Click: Pan | Wheel: Zoom", 20, screenHeight - 75, 14, GRAY);
-    DrawText("Q: Return to Menu | ESC: Exit Program", 20, screenHeight - 55, 14, GRAY);
-
-    DrawText(TextFormat("FPS: %d", GetFPS()), screenWidth - 100, 20, 18, GREEN);
 
     EndDrawing();
 }

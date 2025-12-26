@@ -25,13 +25,20 @@ int main() {
     std::cout << "  N-Body Simulation - Barnes-Hut Algorithm\n";
     std::cout << "==============================================\n\n";
 
-    // Window dimensions
-    const int screenWidth = 1200;
-    const int screenHeight = 800;
+    // Window dimensions (will be updated to actual screen size)
+    int screenWidth = 1200;
+    int screenHeight = 800;
+
+    // Configure window flags before initialization
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
 
     // Initialize raylib window
     InitWindow(screenWidth, screenHeight, "N-Body Simulation - Menu");
     SetTargetFPS(60);
+
+    // Update to actual screen dimensions after window creation
+    screenWidth = GetScreenWidth();
+    screenHeight = GetScreenHeight();
 
     // App state management
     AppState currentState = MENU;
@@ -39,6 +46,7 @@ int main() {
     int selectedScenarioIndex = 2;  // Default to Galaxy Disk
     int particleCount = scenarios[selectedScenarioIndex].recommendedParticles;
     bool trailsEnabled = true;
+    bool uiVisible = true;  // Toggle for UI overlay visibility
     bool startSimulation = false;
     bool startDemo = false;  // For algorithm demo
     std::string textInput = "HELLO";
@@ -75,6 +83,9 @@ int main() {
 
     // Main game loop
     while (!WindowShouldClose()) {
+        // Update screen dimensions in case window was resized
+        screenWidth = GetScreenWidth();
+        screenHeight = GetScreenHeight();
 
         // ==== MENU STATE ====
         if (currentState == MENU) {
@@ -120,7 +131,7 @@ int main() {
                 std::cout << "\n=== Simulation Started ===\n";
                 std::cout << "Scenario: " << selectedScenario.name << std::endl;
                 std::cout << "Particles: " << particles.size() << std::endl;
-                std::cout << "Controls: Q = Return to Menu, R = Reset, M = Toggle Method, T = Toggle Trails\n";
+                std::cout << "Controls: Q = Return to Menu, R = Reset, M = Toggle Method, T = Toggle Trails, H = Hide UI\n";
             }
 
             // Handle demo launch
@@ -186,6 +197,12 @@ int main() {
                 trails.clear();  // Clear trails when disabling
             }
             std::cout << "Trails: " << (trailsEnabled ? "ON" : "OFF") << std::endl;
+        }
+
+        // UI visibility toggle
+        if (IsKeyPressed(KEY_H)) {
+            uiVisible = !uiVisible;
+            std::cout << "UI Overlay: " << (uiVisible ? "VISIBLE" : "HIDDEN") << std::endl;
         }
 
         // Theta adjustment
@@ -265,8 +282,11 @@ int main() {
                 methodName = "Barnes-Hut O(n log n)";
             }
 
-            renderUI(particles.size(), cameraDistance, screenHeight, methodName, theta, simStepsPerFrame,
-                     scenarios[selectedScenarioIndex].name.c_str(), forceCalcs, getTreeRebuildInterval());
+            // Only render UI if visible
+            if (uiVisible) {
+                renderUI(particles.size(), cameraDistance, screenHeight, methodName, theta, simStepsPerFrame,
+                         scenarios[selectedScenarioIndex].name.c_str(), forceCalcs, getTreeRebuildInterval());
+            }
 
             EndDrawing();
         }  // End SIMULATION state
@@ -283,8 +303,14 @@ int main() {
                 continue;
             }
 
+            // UI visibility toggle
+            if (IsKeyPressed(KEY_H)) {
+                uiVisible = !uiVisible;
+                std::cout << "UI Overlay: " << (uiVisible ? "VISIBLE" : "HIDDEN") << std::endl;
+            }
+
             // Render demo
-            renderAlgorithmDemo(demoState, screenWidth, screenHeight);
+            renderAlgorithmDemo(demoState, screenWidth, screenHeight, uiVisible);
         }  // End ALGORITHM_DEMO state
     }  // End main loop
 

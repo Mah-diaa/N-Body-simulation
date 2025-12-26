@@ -178,12 +178,13 @@ void renderUI(int particleCount, float cameraDistance, int screenHeight,
         DrawText(TextFormat("vs Brute Force: %d", bruteForceCalcs), 10, 190, 12, GRAY);
     }
 
-    DrawText("Controls:", 10, screenHeight - 200, 14, GRAY);
-    DrawText("Mouse Drag: Rotate", 10, screenHeight - 180, 12, GRAY);
-    DrawText("Mouse Wheel: Zoom", 10, screenHeight - 165, 12, GRAY);
-    DrawText("WASD: Move target", 10, screenHeight - 150, 12, GRAY);
-    DrawText("M: Toggle method", 10, screenHeight - 135, 12, GRAY);
-    DrawText("T: Toggle trails", 10, screenHeight - 120, 12, GRAY);
+    DrawText("Controls:", 10, screenHeight - 215, 14, GRAY);
+    DrawText("Mouse Drag: Rotate", 10, screenHeight - 195, 12, GRAY);
+    DrawText("Mouse Wheel: Zoom", 10, screenHeight - 180, 12, GRAY);
+    DrawText("WASD: Move target", 10, screenHeight - 165, 12, GRAY);
+    DrawText("M: Toggle method", 10, screenHeight - 150, 12, GRAY);
+    DrawText("T: Toggle trails", 10, screenHeight - 135, 12, GRAY);
+    DrawText("H: Hide UI overlay", 10, screenHeight - 120, 12, GRAY);
     DrawText("UP/DOWN: Sim speed", 10, screenHeight - 105, 12, GRAY);
     DrawText("+/-: Adjust theta", 10, screenHeight - 90, 12, GRAY);
     DrawText("[/]: Tree rebuild interval", 10, screenHeight - 75, 12, GRAY);

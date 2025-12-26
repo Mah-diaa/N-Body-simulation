@@ -33,7 +33,7 @@ struct AlgorithmDemoState {
 // Demo control functions
 void initAlgorithmDemo(AlgorithmDemoState& state);
 void updateAlgorithmDemo(AlgorithmDemoState& state);
-void renderAlgorithmDemo(const AlgorithmDemoState& state, int screenWidth, int screenHeight);
+void renderAlgorithmDemo(const AlgorithmDemoState& state, int screenWidth, int screenHeight, bool uiVisible = true);
 
 // Helper visualization functions
 void drawOctreeNodeBox(double x, double y, double z, double size, Color color);
