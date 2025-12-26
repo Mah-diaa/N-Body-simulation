@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <map>
 #include <cctype>
+#include <cstddef>  // For size_t on Windows/MSVC
 
 // Random number generator
 static std::random_device rd;

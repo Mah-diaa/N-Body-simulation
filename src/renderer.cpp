@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include <cmath>
 #include <iostream>
+#include <cstddef>  // For size_t on Windows/MSVC
 
 void updateCamera(Camera3D& camera, float& cameraAngle, float& cameraDistance) {
     // Mouse drag to rotate

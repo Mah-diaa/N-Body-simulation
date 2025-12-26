@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <deque>
+#include <cstddef>  // For size_t on Windows/MSVC
 #include "particle.h"
 #include "raylib.h"
 

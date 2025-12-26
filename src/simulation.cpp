@@ -1,6 +1,7 @@
 #include "simulation.h"
 #include "particle.h"
 #include <cmath>
+#include <cstddef>  // For size_t on Windows/MSVC
 
 
 void calculateForces(std::vector<Particle> &particles, double G){

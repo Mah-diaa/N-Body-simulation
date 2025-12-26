@@ -1,5 +1,6 @@
 #include "menu.h"
 #include <cmath>
+#include <cstddef>  // For size_t on Windows/MSVC
 
 // Button implementation
 bool Button::isHovered(Vector2 mousePos) const {

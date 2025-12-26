@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <cstddef>  // For size_t on Windows/MSVC
 
 OptimizedOctree::OptimizedOctree()
     : m_particlesRef(nullptr), m_forceCalculations(0), m_treeTraversals(0) {

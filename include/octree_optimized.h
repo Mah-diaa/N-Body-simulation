@@ -4,6 +4,7 @@
 #include "particle.h"
 #include <vector>
 #include <cstdint>
+#include <cstddef>  // For size_t on Windows/MSVC
 
 // Optimized octree node - stored in flat vector for cache locality
 struct OptimizedOctreeNode {
