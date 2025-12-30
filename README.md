@@ -6,38 +6,48 @@ A real-time 3D gravitational N-body simulation implemented in C++ with an intera
 ![CMake](https://img.shields.io/badge/CMake-3.10+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
 
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [How It Works](#-how-it-works)
+- [Project Structure](#-project-structure)
+- [Libraries & Dependencies](#️-libraries--dependencies)
+- [Quick Start](#-quick-start)
+- [Controls](#-controls)
+- [Performance Comparison](#-performance-comparison)
+- [Learning Outcomes](#-learning-outcomes)
+- [Further Reading](#-further-reading)
+
 ## 🌟 Features
 
 ### Interactive Educational Visualization
 - **Algorithm Walkthrough Mode**: Step-by-step visual demonstration of how Barnes-Hut algorithm works
 - **4 Educational Modes**:
   1. **Brute Force O(n²)**: Visualize all pairwise particle interactions
-  2. **Octree Construction**: Watch the octree being built step-by-step
+  2. **Octree Construction**: Watch the octree being built step-by-step as particles are added
   3. **Octree Structure**: Explore the complete hierarchical tree structure
   4. **Barnes-Hut Calculation**: See how the algorithm approximates forces using the octree
+- **2D QuadTree Demo**: Interactive 2D visualization of spatial partitioning
 
 ### Realistic Physics Simulation
 - **Multiple Computation Methods**:
   - CPU Brute Force O(n²) - Direct pairwise calculation
   - Barnes-Hut O(n log n) - Optimized octree approximation
-- **9 Astrophysical Scenarios**:
-  - Plummer Sphere (globular clusters)
-  - Galaxy Disk (spiral galaxies)
+- **5 Astrophysical Scenarios**:
+  - Grid (simple 3D grid for testing)
+  - Galaxy Disk (spiral galaxies with rotation)
   - Keplerian Disk (protoplanetary disks)
-  - Binary Star System
-  - Solar System (with realistic masses)
   - Black Hole Accretion Disk
-  - Galaxy Collision
-  - Figure-8 Three-Body Orbit
-  - Simple Grid (for testing)
+  - Galaxy Collision (two galaxies colliding)
 
 ### Advanced Features
 - Real-time method switching (Brute Force ↔ Barnes-Hut)
 - Adjustable theta parameter for accuracy tuning
 - Simulation speed control (1x-10x)
 - Particle trails visualization
-- Interactive projectile shooting
 - Full 3D camera controls (rotate, pan, zoom)
+- Progressive octree building demonstration
+- UI overlay toggle
 
 ## 🎓 How It Works
 
@@ -83,66 +93,80 @@ nbody/
 ├── README.md                    # This file
 ├── .gitignore                   # Git ignore rules
 ├── CMakeLists.txt               # CMake build configuration
-├── build.sh                     # Easy build script (Linux/Mac)
+├── build.sh                     # Easy build script
 ├── run.sh                       # Easy run script
 │
 ├── src/                         # Source files (.cpp)
-│   ├── main.cpp                 # Entry point, scenario selection menu
+│   ├── main.cpp                 # Entry point, main loop, state management
 │   ├── menu.cpp                 # Interactive menu system
 │   ├── simulation.cpp           # Brute force physics engine
-│   ├── octree_optimized.cpp     # Barnes-Hut octree implementation
-│   ├── scenarios.cpp            # 9 astrophysical scenario generators
-│   ├── algorithm_demo.cpp       # Educational visualization mode
-│   └── renderer.cpp             # 3D rendering and visualization
+│   ├── scenarios.cpp            # Astrophysical scenario generators
+│   ├── renderer.cpp             # 3D rendering and visualization
+│   │
+│   ├── algorithms/              # Pure algorithm implementations (no rendering)
+│   │   ├── README.md            # Algorithm directory documentation
+│   │   ├── octree3d.cpp         # 3D Octree (Barnes-Hut in 3D)
+│   │   └── quadtree2d.cpp       # 2D QuadTree (Barnes-Hut in 2D)
+│   │
+│   └── demos/                   # Visualization demos (uses algorithms + rendering)
+│       ├── README.md            # Demos directory documentation
+│       ├── octree_demo.cpp      # 3D Octree educational visualization
+│       └── quadtree_demo.cpp    # 2D QuadTree interactive demo
 │
 ├── include/                     # Header files (.h)
 │   ├── particle.h               # Particle data structure
 │   ├── menu.h                   # Menu system declarations
 │   ├── simulation.h             # Physics engine interface
-│   ├── octree_optimized.h       # Octree structure and algorithms
 │   ├── scenarios.h              # Scenario types and generators
-│   ├── algorithm_demo.h         # Educational mode interface
-│   └── renderer.h               # Rendering functions
+│   ├── renderer.h               # Rendering functions
+│   │
+│   ├── algorithms/              # Algorithm headers
+│   │   ├── octree3d.h           # 3D Octree structure and interface
+│   │   └── quadtree2d.h         # 2D QuadTree structure and interface
+│   │
+│   └── demos/                   # Demo headers
+│       ├── octree_demo.h        # 3D demo interface
+│       └── quadtree_demo.h      # 2D demo interface
 │
 └── build/                       # Build output (gitignored)
     └── nbody                    # Compiled executable
 ```
 
-### File Descriptions
+### File Organization
 
 #### Core Files
-- **main.cpp**: Program entry point, handles scenario selection menu and main loop
-- **particle.h**: Defines the `Particle` struct (position, velocity, mass, rendering info)
+- **main.cpp**: Program entry point, scenario selection menu, main loop
+- **particle.h**: Defines the `Particle` struct (position, velocity, mass)
+- **menu.cpp/h**: Interactive menu system for scenario selection
+- **renderer.cpp/h**: 3D rendering functions using Raylib
 
 #### Physics Engine
-- **simulation.cpp/h**: Implements brute force O(n²) gravity calculations
-- **octree_optimized.cpp/h**: Barnes-Hut tree structure with optimized flat storage
-  - Flat vector storage for better cache locality
-  - Implicit child indexing (children stored sequentially)
+- **simulation.cpp/h**: Brute force O(n²) gravity calculations
+- **scenarios.cpp/h**: Generators for 5 astrophysical scenarios
 
-#### Visualization
-- **renderer.cpp/h**: All rendering functions using Raylib
-  - Camera controls, particle rendering, trails, UI
-- **algorithm_demo.cpp/h**: Educational walkthrough visualization
-  - Step-by-step algorithm demonstration
-  - Visual octree construction
-  - Interactive learning mode
+#### Algorithms (Pure Logic)
+- **algorithms/octree3d.cpp/h**: Barnes-Hut 3D octree implementation
+  - Flat vector storage for cache locality
+  - Implicit child indexing
+  - Optimized for computation
+- **algorithms/quadtree2d.cpp/h**: Barnes-Hut 2D quadtree implementation
+  - 2D spatial partitioning
+  - Center of mass calculation
 
-#### Scenarios & Menu
-- **scenarios.cpp/h**: Generators for 9 different astrophysical scenarios
-  - Each scenario has custom parameters (G, dt, particle distribution)
-- **menu.cpp/h**: Interactive menu system for scenario and mode selection
+#### Demos (Visualization)
+- **demos/octree_demo.cpp/h**: Educational 3D octree walkthrough
+  - 4 interactive visualization modes
+  - Progressive tree building demonstration
+  - Step-by-step algorithm explanation
+- **demos/quadtree_demo.cpp/h**: Interactive 2D quadtree demo
+  - Step-by-step particle insertion
+  - Real-time tree structure visualization
+  - Center of mass tracking
 
 ## 🛠️ Libraries & Dependencies
 
 ### Raylib
 **What it is**: A simple and easy-to-use library to enjoy videogames programming
-
-**Why we use it**:
-- Easy 3D visualization without complex OpenGL setup
-- Built-in camera controls
-- Cross-platform (Windows, Linux, macOS)
-- Lightweight and fast
 
 **What it provides**:
 - 3D rendering (spheres, lines, cubes for visualization)
@@ -150,15 +174,14 @@ nbody/
 - Input handling (mouse, keyboard)
 - Text rendering for UI
 
-**Installation**:
-- Ubuntu/Debian: `sudo apt install libraylib-dev`
-- macOS: `brew install raylib`
-- Windows: See [Raylib Installation Guide](https://github.com/raysan5/raylib)
+**Installation (Linux)**:
+```bash
+# Ubuntu/Debian
+sudo apt install libraylib-dev
+```
 
 ### CMake
 **What it is**: Cross-platform build system generator
-
-**Why we use it**: Manages the build process across different platforms
 
 ## 🚀 Quick Start
 
@@ -166,17 +189,10 @@ nbody/
 ```bash
 # Ubuntu/Debian
 sudo apt install cmake g++ libraylib-dev
-
-# macOS
-brew install cmake raylib
-
-# Windows (using vcpkg)
-vcpkg install raylib
 ```
 
-### Build & Run (Easy Way)
+### Build & Run
 
-#### Linux/macOS:
 ```bash
 # Make scripts executable (first time only)
 chmod +x build.sh run.sh
@@ -188,7 +204,7 @@ chmod +x build.sh run.sh
 ./run.sh
 ```
 
-#### Manual Build (All Platforms):
+### Manual Build
 ```bash
 # Create build directory
 mkdir build
@@ -198,57 +214,59 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Build
-make        # Linux/macOS
-# or
-cmake --build . --config Release    # Windows
+make
 
 # Run
-./nbody     # Linux/macOS
-# or
-.\nbody.exe # Windows
+./nbody
 ```
 
 ## 🎮 Controls
 
 ### Main Menu
-- **Number keys (1-9)**: Select astrophysical scenario
-- **A**: Educational Algorithm Demonstration Mode
+- **Number keys (1-5)**: Select astrophysical scenario
+- **A**: 3D Octree Educational Demonstration Mode
+- **B**: 2D QuadTree Educational Demonstration Mode
 - **ESC**: Exit program
 
 ### Simulation Mode
 
 #### Camera Controls
 - **Left Click + Drag**: Rotate camera around scene
-- **Middle Click + Drag**: Pan camera (move viewpoint)
 - **Mouse Wheel**: Zoom in/out
-- **WASD**: Move camera target
 
 #### Simulation Controls
 - **M**: Toggle method (Brute Force ↔ Barnes-Hut)
 - **T**: Toggle particle trails
+- **H**: Toggle UI overlay visibility
 - **UP/DOWN**: Adjust simulation speed (1x-10x)
 - **+/-**: Adjust theta parameter (Barnes-Hut accuracy)
 - **[/]**: Adjust tree rebuild interval
 - **R**: Reset to initial state
-- **SPACE**: Shoot projectile from camera
 - **Q**: Return to menu
 - **ESC**: Exit program
 
-### Educational Mode
+### 3D Octree Demo Mode
 
 #### Mode Selection
 - **1**: Brute Force Visualization
-- **2**: Octree Construction (step-by-step)
+- **2**: Progressive Octree Building (step-by-step)
 - **3**: Complete Octree Structure
 - **4**: Barnes-Hut Force Calculation
 
 #### Controls
-- **SPACE**: Step through demonstration
+- **SPACE**: Step through demonstration (add next particle in mode 2)
 - **R**: Reset demonstration
 - **+/-**: Adjust theta parameter (mode 4 only)
 - **Left Click + Drag**: Rotate camera
-- **Middle Click + Drag**: Pan camera
 - **Mouse Wheel**: Zoom
+- **Q**: Return to menu
+- **ESC**: Exit program
+
+### 2D QuadTree Demo Mode
+
+#### Controls
+- **SPACE**: Add next particle to tree
+- **R**: Reset demonstration
 - **Q**: Return to menu
 - **ESC**: Exit program
 
@@ -267,12 +285,13 @@ The Barnes-Hut algorithm becomes even more advantageous as particle count increa
 
 This project demonstrates:
 - ✅ Advanced C++ programming (STL, structs, headers)
-- ✅ Spatial data structures (Octree)
+- ✅ Spatial data structures (Octree, QuadTree)
 - ✅ Algorithm optimization (O(n²) → O(n log n))
 - ✅ Computational physics (gravitational N-body problem)
 - ✅ 3D graphics and visualization
 - ✅ Interactive real-time applications
 - ✅ Educational software design
+- ✅ Separation of concerns (algorithms vs visualization)
 
 ## 🤝 Contributing
 
@@ -298,7 +317,3 @@ This project is open source and available under the MIT License.
 - [Octree Data Structure](https://en.wikipedia.org/wiki/Octree)
 - [N-body Problem](https://en.wikipedia.org/wiki/N-body_problem)
 - [Raylib Documentation](https://www.raylib.com/)
-
----
-
-**Made with ❤️ for learning computational physics and computer graphics**

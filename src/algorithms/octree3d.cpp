@@ -1,4 +1,4 @@
-#include "octree_optimized.h"
+#include "algorithms/octree3d.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>

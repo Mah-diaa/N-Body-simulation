@@ -9,12 +9,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     src/main.cpp
     src/simulation.cpp
-    src/octree_optimized.cpp
     src/renderer.cpp
     src/scenarios.cpp
     src/menu.cpp
-    src/algorithm_demo.cpp
-    src/quadtree_demo.cpp
+
+    # Algorithm implementations (pure logic, no rendering)
+    src/algorithms/quadtree2d.cpp
+    src/algorithms/octree3d.cpp
+
+    # Demo/visualization code
+    src/demos/quadtree_demo.cpp
+    src/demos/octree_demo.cpp
 )
 
 # Add executable

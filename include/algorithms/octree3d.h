@@ -1,7 +1,7 @@
-#ifndef OCTREE_OPTIMIZED_H
-#define OCTREE_OPTIMIZED_H
+#ifndef OCTREE3D_H
+#define OCTREE3D_H
 
-#include "particle.h"
+#include "../particle.h"
 #include <vector>
 #include <cstdint>
 #include <cstddef>  // For size_t on Windows/MSVC
@@ -86,4 +86,4 @@ void getBarnesHutStats(int& forceCalcs, int& traversals);
 void setTreeRebuildInterval(int interval);
 int getTreeRebuildInterval();
 
-#endif // OCTREE_OPTIMIZED_H
+#endif // OCTREE3D_H

@@ -2,12 +2,12 @@
 #include <vector>
 #include "particle.h"
 #include "simulation.h"
-#include "octree_optimized.h"
+#include "algorithms/octree3d.h"
 #include "renderer.h"
 #include "scenarios.h"
 #include "menu.h"
-#include "algorithm_demo.h"
-#include "quadtree_demo.h"
+#include "demos/octree_demo.h"
+#include "demos/quadtree_demo.h"
 #include "raylib.h"
 
 enum SimulationMethod {
@@ -60,7 +60,6 @@ int main() {
     bool startSimulation = false;
     bool startDemo = false;  // For algorithm demo
     bool startQuadTreeDemo = false;  // For quadtree demo
-    std::string textInput = "HELLO";
 
     // Simulation variables (initialized when simulation starts)
     std::vector<Particle> particles;
@@ -75,7 +74,6 @@ int main() {
     double projectileSpeed = 5.0;
     ScenarioType currentScenarioType;
     int currentParticleCount = 0;
-    std::string currentTextInput = "";
 
     // Algorithm demo state
     AlgorithmDemoState demoState;
@@ -110,19 +108,7 @@ int main() {
 
                 // Get selected scenario
                 Scenario selectedScenario = scenarios[selectedScenarioIndex];
-
-                // Handle TEXT scenario
-                if (selectedScenario.type == TEXT) {
-                    // For now, use default text or prompt in terminal
-                    if (textInput.empty()) {
-                        std::cout << "Enter text for TEXT scenario: ";
-                        std::getline(std::cin, textInput);
-                        if (textInput.empty()) textInput = "HELLO";
-                    }
-                    createScenarioWithText(particles, TEXT, particleCount, textInput);
-                } else {
-                    createScenario(particles, selectedScenario.type, particleCount);
-                }
+                createScenario(particles, selectedScenario.type, particleCount);
 
                 // Initialize simulation parameters
                 G = selectedScenario.recommendedG;
@@ -131,7 +117,6 @@ int main() {
                 numStaticParticles = particles.size();
                 currentScenarioType = selectedScenario.type;
                 currentParticleCount = particles.size();
-                currentTextInput = textInput;
 
                 // Reset camera
                 camera.position = (Vector3){ 50.0f, 50.0f, 50.0f };
@@ -166,7 +151,7 @@ int main() {
             BeginDrawing();
             renderMenu(screenWidth, screenHeight, scenarios,
                       selectedScenarioIndex, particleCount,
-                      trailsEnabled, startSimulation, startDemo, startQuadTreeDemo, textInput);
+                      trailsEnabled, startSimulation, startDemo, startQuadTreeDemo);
             EndDrawing();
         }
 
@@ -269,11 +254,7 @@ int main() {
         // Reset simulation (recreate scenario)
         if (IsKeyPressed(KEY_R)) {
             particles.clear();
-            if (currentScenarioType == TEXT) {
-                createScenarioWithText(particles, currentScenarioType, currentParticleCount, currentTextInput);
-            } else {
-                createScenario(particles, currentScenarioType, currentParticleCount);
-            }
+            createScenario(particles, currentScenarioType, currentParticleCount);
             initialParticles = particles;
             numStaticParticles = particles.size();
             camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };

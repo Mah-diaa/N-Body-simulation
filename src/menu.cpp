@@ -66,8 +66,7 @@ void renderMenu(int screenWidth, int screenHeight,
                 bool& trailsEnabled,
                 bool& startSimulation,
                 bool& startDemo,
-                bool& startQuadTreeDemo,
-                std::string& textInput) {
+                bool& startQuadTreeDemo) {
 
     ClearBackground(BLACK);
 
@@ -107,13 +106,7 @@ void renderMenu(int screenWidth, int screenHeight,
         // Handle click
         if (hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             selectedScenarioIndex = i;
-
-            // Update particle count to recommended
-            const Scenario& scenario = scenarios[i];
-            if (scenario.type != BINARY_ORBIT && scenario.type != FIGURE_8 &&
-                scenario.type != SOLAR_SYSTEM && scenario.type != TEXT) {
-                particleCount = scenario.recommendedParticles;
-            }
+            particleCount = scenarios[i].recommendedParticles;
         }
     }
 
@@ -126,16 +119,7 @@ void renderMenu(int screenWidth, int screenHeight,
     particleSlider.currentValue = &particleCount;
     particleSlider.label = "PARTICLE COUNT:";
 
-    // Disable slider for fixed scenarios
-    const Scenario& selectedScenario = scenarios[selectedScenarioIndex];
-    particleSlider.enabled = (selectedScenario.type != BINARY_ORBIT &&
-                              selectedScenario.type != FIGURE_8 &&
-                              selectedScenario.type != SOLAR_SYSTEM &&
-                              selectedScenario.type != TEXT);
-
-    if (!particleSlider.enabled) {
-        particleCount = selectedScenario.recommendedParticles;
-    }
+    particleSlider.enabled = true;
 
     particleSlider.update(mousePos);
     particleSlider.draw();
@@ -157,17 +141,7 @@ void renderMenu(int screenWidth, int screenHeight,
     DrawText(trailsEnabled ? "ON" : "OFF", toggleRect.x + 15, toggleRect.y + 5, 20,
              trailsEnabled ? GREEN : GRAY);
 
-    // Text input for TEXT scenario
-    if (selectedScenario.type == TEXT) {
-        int textInputY = toggleY + 60;
-        DrawText("TEXT INPUT:", 50, textInputY, 20, WHITE);
-        DrawText("(Type in terminal for now)", 50, textInputY + 25, 14, GRAY);
-        if (!textInput.empty()) {
-            DrawText(TextFormat("Current: %s", textInput.c_str()), 50, textInputY + 45, 16, YELLOW);
-        }
-    }
-
-    // NEW LAYOUT: Start button at bottom, Demo buttons STACKED on right side
+    // Start button at bottom, Demo buttons STACKED on right side
     float buttonWidth = 280;
     float buttonHeight = 65;
     float buttonSpacing = 15;

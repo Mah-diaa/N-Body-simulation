@@ -38,7 +38,6 @@ void renderMenu(int screenWidth, int screenHeight,
                 bool& trailsEnabled,
                 bool& startSimulation,
                 bool& startDemo,
-                bool& startQuadTreeDemo,
-                std::string& textInput);
+                bool& startQuadTreeDemo);
 
 #endif // MENU_H
