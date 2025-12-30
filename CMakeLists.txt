@@ -14,6 +14,7 @@ set(SOURCES
     src/scenarios.cpp
     src/menu.cpp
     src/algorithm_demo.cpp
+    src/quadtree_demo.cpp
 )
 
 # Add executable

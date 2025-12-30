@@ -66,6 +66,7 @@ void renderMenu(int screenWidth, int screenHeight,
                 bool& trailsEnabled,
                 bool& startSimulation,
                 bool& startDemo,
+                bool& startQuadTreeDemo,
                 std::string& textInput) {
 
     ClearBackground(BLACK);
@@ -166,9 +167,46 @@ void renderMenu(int screenWidth, int screenHeight,
         }
     }
 
-    // Start button
+    // NEW LAYOUT: Start button at bottom, Demo buttons STACKED on right side
+    float buttonWidth = 280;
+    float buttonHeight = 65;
+    float buttonSpacing = 15;
+
+    // Right side: Demo buttons STACKED VERTICALLY
+    float rightX = screenWidth - buttonWidth - 50;
+    float rightStartY = 300;  // Start higher up on the right
+
+    // Algorithm Demo button (3D) - TOP
+    Button demoButton;
+    demoButton.bounds = {rightX, rightStartY, buttonWidth, buttonHeight};
+    demoButton.text = "3D ALGORITHM DEMO";
+    demoButton.normalColor = (Color){100, 20, 100, 255};
+    demoButton.hoverColor = (Color){150, 30, 150, 255};
+
+    demoButton.draw();
+
+    if (demoButton.isClicked(mousePos)) {
+        startDemo = true;
+    }
+
+    // QuadTree Demo button (2D) - BELOW 3D button
+    Button quadTreeButton;
+    quadTreeButton.bounds = {rightX, rightStartY + buttonHeight + buttonSpacing, buttonWidth, buttonHeight};
+    quadTreeButton.text = "2D QUADTREE DEMO";
+    quadTreeButton.normalColor = (Color){20, 80, 120, 255};
+    quadTreeButton.hoverColor = (Color){30, 120, 180, 255};
+
+    quadTreeButton.draw();
+
+    if (quadTreeButton.isClicked(mousePos)) {
+        startQuadTreeDemo = true;
+    }
+
+    // Start Simulation button - BOTTOM CENTER (well below trails)
+    float startButtonWidth = 350;
+    float startButtonHeight = 75;
     Button startButton;
-    startButton.bounds = {(float)screenWidth/2 - 360, (float)screenHeight - 120, 280, 60};
+    startButton.bounds = {(screenWidth - startButtonWidth) / 2.0f, (float)screenHeight - 110, startButtonWidth, startButtonHeight};
     startButton.text = "START SIMULATION";
     startButton.normalColor = (Color){20, 100, 20, 255};
     startButton.hoverColor = (Color){30, 150, 30, 255};
@@ -177,19 +215,6 @@ void renderMenu(int screenWidth, int screenHeight,
 
     if (startButton.isClicked(mousePos)) {
         startSimulation = true;
-    }
-
-    // Algorithm Demo button
-    Button demoButton;
-    demoButton.bounds = {(float)screenWidth/2 + 80, (float)screenHeight - 120, 280, 60};
-    demoButton.text = "ALGORITHM DEMO";
-    demoButton.normalColor = (Color){100, 20, 100, 255};
-    demoButton.hoverColor = (Color){150, 30, 150, 255};
-
-    demoButton.draw();
-
-    if (demoButton.isClicked(mousePos)) {
-        startDemo = true;
     }
 
     // Controls info

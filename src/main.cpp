@@ -7,6 +7,7 @@
 #include "scenarios.h"
 #include "menu.h"
 #include "algorithm_demo.h"
+#include "quadtree_demo.h"
 #include "raylib.h"
 
 enum SimulationMethod {
@@ -17,7 +18,8 @@ enum SimulationMethod {
 enum AppState {
     MENU,
     SIMULATION,
-    ALGORITHM_DEMO
+    ALGORITHM_DEMO,
+    QUADTREE_DEMO
 };
 
 int main() {
@@ -25,12 +27,20 @@ int main() {
     std::cout << "  N-Body Simulation - Barnes-Hut Algorithm\n";
     std::cout << "==============================================\n\n";
 
-    // Window dimensions (will be updated to actual screen size)
-    int screenWidth = 1200;
-    int screenHeight = 800;
-
     // Configure window flags before initialization
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+
+    // Get monitor size to fit window nicely
+    int monitorWidth = GetMonitorWidth(0);
+    int monitorHeight = GetMonitorHeight(0);
+
+    // Use 85% of monitor size for a good fit (not too big, not too small)
+    int screenWidth = (int)(monitorWidth * 0.85f);
+    int screenHeight = (int)(monitorHeight * 0.85f);
+
+    // Ensure minimum size for readability
+    if (screenWidth < 1200) screenWidth = 1200;
+    if (screenHeight < 800) screenHeight = 800;
 
     // Initialize raylib window
     InitWindow(screenWidth, screenHeight, "N-Body Simulation - Menu");
@@ -49,6 +59,7 @@ int main() {
     bool uiVisible = true;  // Toggle for UI overlay visibility
     bool startSimulation = false;
     bool startDemo = false;  // For algorithm demo
+    bool startQuadTreeDemo = false;  // For quadtree demo
     std::string textInput = "HELLO";
 
     // Simulation variables (initialized when simulation starts)
@@ -68,6 +79,9 @@ int main() {
 
     // Algorithm demo state
     AlgorithmDemoState demoState;
+
+    // QuadTree demo state
+    QuadTreeDemo quadTreeDemo;
 
     // 3D camera
     Camera3D camera = { 0 };
@@ -141,11 +155,18 @@ int main() {
                 initAlgorithmDemo(demoState);
             }
 
+            // Handle quadtree demo launch
+            if (startQuadTreeDemo) {
+                currentState = QUADTREE_DEMO;
+                startQuadTreeDemo = false;
+                quadTreeDemo.reset();
+            }
+
             // Render menu
             BeginDrawing();
             renderMenu(screenWidth, screenHeight, scenarios,
                       selectedScenarioIndex, particleCount,
-                      trailsEnabled, startSimulation, startDemo, textInput);
+                      trailsEnabled, startSimulation, startDemo, startQuadTreeDemo, textInput);
             EndDrawing();
         }
 
@@ -312,6 +333,32 @@ int main() {
             // Render demo
             renderAlgorithmDemo(demoState, screenWidth, screenHeight, uiVisible);
         }  // End ALGORITHM_DEMO state
+
+        // ==== QUADTREE DEMO STATE ====
+        else if (currentState == QUADTREE_DEMO) {
+            // Update demo
+            quadTreeDemo.update();
+
+            // Handle input
+            if (IsKeyPressed(KEY_SPACE)) {
+                quadTreeDemo.addNextParticle();
+            }
+
+            if (IsKeyPressed(KEY_R)) {
+                quadTreeDemo.reset();
+                std::cout << "QuadTree demo reset\n";
+            }
+
+            // Return to menu
+            if (IsKeyPressed(KEY_Q)) {
+                currentState = MENU;
+                std::cout << "\n=== Returned to Menu ===\n";
+                continue;
+            }
+
+            // Render demo
+            quadTreeDemo.render(screenWidth, screenHeight);
+        }  // End QUADTREE_DEMO state
     }  // End main loop
 
     CloseWindow();
