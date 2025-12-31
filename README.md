@@ -6,20 +6,6 @@ A real-time 3D gravitational N-body simulation implemented in C++ with an intera
 ![CMake](https://img.shields.io/badge/CMake-3.10+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
 
-## 📑 Table of Contents
-
-- [Features](#-features)
-- [How It Works](#-how-it-works)
-- [Project Structure](#-project-structure)
-- [Libraries & Dependencies](#️-libraries--dependencies)
-- [Quick Start](#-quick-start)
-- [Controls](#-controls)
-- [Performance Comparison](#-performance-comparison)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Acknowledgments](#-acknowledgments)
-- [Further Reading](#-further-reading)
-
 <details open>
 <summary>🌟 Features</summary>
 
@@ -247,29 +233,9 @@ The Barnes-Hut algorithm becomes even more advantageous as particle count increa
 </details>
 
 <details>
-<summary>🤝 Contributing</summary>
-
-This is an educational project, but suggestions and improvements are welcome! Feel free to:
-- Report bugs
-- Suggest new scenarios
-- Propose algorithm optimizations
-- Improve visualizations
-
-</details>
-
-<details>
 <summary>📝 License</summary>
 
 This project is open source and available under the MIT License.
-
-</details>
-
-<details>
-<summary>🙏 Acknowledgments</summary>
-
-- **Barnes & Hut (1986)**: For the original O(n log n) algorithm
-- **Raylib**: For making 3D graphics accessible
-- Inspired by astronomical simulations and computational astrophysics
 
 </details>
 
