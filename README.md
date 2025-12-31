@@ -179,53 +179,31 @@ make
 <details>
 <summary>🎮 Controls</summary>
 
-### Main Menu
-- **Number keys (1-5)**: Select astrophysical scenario
-- **A**: 3D Octree Educational Demonstration Mode
-- **B**: 2D QuadTree Educational Demonstration Mode
-- **ESC**: Exit program
-
-### Simulation Mode
-
-#### Camera Controls
-- **Left Click + Drag**: Rotate camera around scene
+### Camera (Universal)
+- **Left Click + Drag**: Rotate camera
 - **Mouse Wheel**: Zoom in/out
 
-#### Simulation Controls
+### Main Menu
+- **Number keys (1-7)**: Select scenario
+- **A**: 3D Octree Demo
+- **B**: 2D QuadTree Demo
+
+### Simulation
 - **M**: Toggle method (Brute Force ↔ Barnes-Hut)
-- **T**: Toggle particle trails
-- **H**: Toggle UI overlay visibility
-- **UP/DOWN**: Adjust simulation speed (1x-10x)
-- **+/-**: Adjust theta parameter (Barnes-Hut accuracy)
-- **[/]**: Adjust tree rebuild interval
-- **R**: Reset to initial state
+- **T**: Toggle trails
+- **H**: Hide UI
+- **R**: Reset
 - **Q**: Return to menu
-- **ESC**: Exit program
 
-### 3D Octree Demo Mode
+### Performance Tuning
+- **+/-**: Theta parameter - Lower values = more accurate but slower, higher = faster but less accurate
+- **UP/DOWN**: Simulation speed (1x-10x) - Run multiple physics steps per frame for faster evolution
+- **[/]**: Tree rebuild interval - How often the octree is reconstructed (lower = more accurate, higher = faster)
 
-#### Mode Selection
-- **1**: Brute Force Visualization
-- **2**: Progressive Octree Building (step-by-step)
-- **3**: Complete Octree Structure
-- **4**: Barnes-Hut Force Calculation
-
-#### Controls
-- **SPACE**: Step through demonstration (add next particle in mode 2)
-- **R**: Reset demonstration
-- **+/-**: Adjust theta parameter (mode 4 only)
-- **Left Click + Drag**: Rotate camera
-- **Mouse Wheel**: Zoom
-- **Q**: Return to menu
-- **ESC**: Exit program
-
-### 2D QuadTree Demo Mode
-
-#### Controls
-- **SPACE**: Add next particle to tree
-- **R**: Reset demonstration
-- **Q**: Return to menu
-- **ESC**: Exit program
+### Demo Modes
+- **SPACE**: Step through demonstration / Add next particle
+- **1-4**: Switch visualization mode (3D Octree Demo only)
+- **R**: Reset
 
 </details>
 
