@@ -64,6 +64,7 @@ void renderMenu(int screenWidth, int screenHeight,
                 int& selectedScenarioIndex,
                 int& particleCount,
                 bool& trailsEnabled,
+                double& softening,
                 bool& startSimulation,
                 bool& startDemo,
                 bool& startQuadTreeDemo) {
@@ -140,6 +141,25 @@ void renderMenu(int screenWidth, int screenHeight,
     DrawRectangleLinesEx(toggleRect, 2, trailsEnabled ? GREEN : GRAY);
     DrawText(trailsEnabled ? "ON" : "OFF", toggleRect.x + 15, toggleRect.y + 5, 20,
              trailsEnabled ? GREEN : GRAY);
+
+    // Softening toggle
+    int softeningY = toggleY + 45;
+    DrawText("SOFTENING:", 50, softeningY, 20, WHITE);
+    DrawText("(Prevents particle slingshots)", 300, softeningY + 5, 12, GRAY);
+
+    Rectangle softeningRect = {200, (float)softeningY, 80, 30};
+    bool softeningHovered = CheckCollisionPointRec(mousePos, softeningRect);
+
+    if (softeningHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        softening = (softening < 0.5) ? 1.0 : 0.1;
+    }
+
+    Color softeningColor = softeningHovered ? (Color){50, 50, 70, 255} : (Color){30, 30, 40, 255};
+    DrawRectangleRec(softeningRect, softeningColor);
+    bool highSoftening = (softening >= 0.5);
+    DrawRectangleLinesEx(softeningRect, 2, highSoftening ? GREEN : ORANGE);
+    DrawText(highSoftening ? "HIGH" : "LOW", softeningRect.x + 10, softeningRect.y + 5, 20,
+             highSoftening ? GREEN : ORANGE);
 
     // Start button at bottom, Demo buttons STACKED on right side
     float buttonWidth = 280;

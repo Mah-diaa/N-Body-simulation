@@ -27,7 +27,7 @@ struct ParticleTrail {
 };
 
 // Camera control
-void updateCamera(Camera3D& camera, float& cameraAngle, float& cameraDistance);
+void updateCamera(Camera3D& camera, float& cameraAngleH, float& cameraAngleV, float& cameraDistance);
 
 // Particle shooting
 void shootProjectile(std::vector<Particle>& particles, const Camera3D& camera,
@@ -38,7 +38,7 @@ void renderParticles(const std::vector<Particle>& particles, int numStaticPartic
                     const std::vector<ParticleTrail>& trails, const Camera3D& camera, bool trailsEnabled = true);
 void renderUI(int particleCount, float cameraDistance, int screenHeight,
               const char* methodName, double theta, int simSpeed, const char* scenarioName,
-              int forceCalcs, int rebuildInterval);
+              int forceCalcs, int rebuildInterval, double softening);
 
 // Trail management
 void updateTrails(const std::vector<Particle>& particles, std::vector<ParticleTrail>& trails,

@@ -18,7 +18,9 @@ double randomNormal(double mean, double stddev) {
 std::vector<Scenario> getScenarios() {
     return {
         {GRID, "Grid", "Simple 3D grid (testing)", 1000, 1.0, 0.01},
-        {GALAXY_DISK, "Galaxy Disk", "Spiral galaxy with rotation", 5000, 1.0, 0.005},
+        {BINARY_STARS, "Binary Stars", "Two stars orbiting with debris field", 3000, 1.0, 0.005},
+        {GLOBULAR_CLUSTER, "Big Bang", "Collapse and explosive expansion", 4000, 1.0, 0.01},
+        {STABLE_CLUSTER, "Globular Cluster", "Stable spherical star cluster", 3000, 1.0, 0.01},
         {KEPLERIAN_DISK, "Keplerian Disk", "Orbiting disk around central mass", 3000, 50.0, 0.002},
         {BLACK_HOLE, "Black Hole", "Accretion disk around black hole", 3000, 200.0, 0.001},
         {GALAXY_COLLISION, "Galaxy Collision", "Two galaxies colliding", 4000, 1.0, 0.005}
@@ -32,8 +34,14 @@ void createScenario(std::vector<Particle>& particles, ScenarioType type, int num
         case GRID:
             createGrid(particles, (int)std::cbrt(numParticles));
             break;
-        case GALAXY_DISK:
-            createGalaxyDisk(particles, numParticles);
+        case BINARY_STARS:
+            createBinaryStars(particles, numParticles);
+            break;
+        case GLOBULAR_CLUSTER:
+            createGlobularCluster(particles, numParticles);
+            break;
+        case STABLE_CLUSTER:
+            createStableCluster(particles, numParticles);
             break;
         case KEPLERIAN_DISK:
             createKeplerianDisk(particles, numParticles);
@@ -63,34 +71,138 @@ void createGrid(std::vector<Particle>& particles, int gridSize) {
     }
 }
 
-void createGalaxyDisk(std::vector<Particle>& particles, int numParticles) {
-    double diskRadius = 50.0;
-    double diskHeight = 2.0;
-    double centralMass = 1000.0;
+void createBinaryStars(std::vector<Particle>& particles, int numParticles) {
+    double separation = 40.0;
+    double starMass = 500.0;
+    double G = 1.0;
 
-    Particle center;
-    center.x = center.y = center.z = 0.0;
-    center.vx = center.vy = center.vz = 0.0;
-    center.mass = centralMass;
-    particles.push_back(center);
+    // For circular orbit: v = sqrt(G * M / (2 * separation))
+    double orbitalVelocity = std::sqrt(G * starMass / (2.0 * separation));
 
-    for (int i = 0; i < numParticles - 1; i++) {
-        Particle p;
-        double r = -diskRadius * 0.3 * std::log(randomUniform(0.01, 1.0));
-        r = std::min(r, diskRadius);
+    // Star 1
+    Particle star1;
+    star1.x = separation / 2;
+    star1.y = 0.0;
+    star1.z = 0.0;
+    star1.vx = 0.0;
+    star1.vy = orbitalVelocity;
+    star1.vz = 0.0;
+    star1.mass = starMass;
+    particles.push_back(star1);
+
+    // Star 2
+    Particle star2;
+    star2.x = -separation / 2;
+    star2.y = 0.0;
+    star2.z = 0.0;
+    star2.vx = 0.0;
+    star2.vy = -orbitalVelocity;
+    star2.vz = 0.0;
+    star2.mass = starMass;
+    particles.push_back(star2);
+
+    // Debris field around both stars
+    int particlesPerStar = (numParticles - 2) / 2;
+
+    for (int i = 0; i < particlesPerStar; i++) {
+        // Particles around star 1
+        Particle p1;
+        double r = randomUniform(5.0, 15.0);
         double theta = randomUniform(0.0, 2.0 * M_PI);
+        double phi = randomUniform(0.0, 2.0 * M_PI);
 
-        p.x = r * std::cos(theta);
-        p.y = r * std::sin(theta);
-        p.z = randomNormal(0.0, diskHeight);
+        p1.x = separation / 2 + r * std::cos(theta);
+        p1.y = r * std::sin(theta) * std::cos(phi);
+        p1.z = r * std::sin(theta) * std::sin(phi);
 
         double G = 1.0;
-        double v_circular = std::sqrt(G * centralMass / (r + 1.0));
+        double v = std::sqrt(G * starMass / r) * 0.7;
+        p1.vx = -v * std::sin(theta);
+        p1.vy = orbitalVelocity + v * std::cos(theta) * std::cos(phi);
+        p1.vz = v * std::cos(theta) * std::sin(phi);
+        p1.mass = 0.001;
+        particles.push_back(p1);
 
-        p.vx = -v_circular * std::sin(theta);
-        p.vy = v_circular * std::cos(theta);
-        p.vz = randomNormal(0.0, 0.1);
-        p.mass = 0.01;
+        // Particles around star 2
+        Particle p2;
+        r = randomUniform(5.0, 15.0);
+        theta = randomUniform(0.0, 2.0 * M_PI);
+        phi = randomUniform(0.0, 2.0 * M_PI);
+
+        p2.x = -separation / 2 + r * std::cos(theta);
+        p2.y = r * std::sin(theta) * std::cos(phi);
+        p2.z = r * std::sin(theta) * std::sin(phi);
+
+        v = std::sqrt(G * starMass / r) * 0.7;
+        p2.vx = -v * std::sin(theta);
+        p2.vy = -orbitalVelocity + v * std::cos(theta) * std::cos(phi);
+        p2.vz = v * std::cos(theta) * std::sin(phi);
+        p2.mass = 0.001;
+        particles.push_back(p2);
+    }
+}
+
+void createGlobularCluster(std::vector<Particle>& particles, int numParticles) {
+    double clusterRadius = 50.0;
+
+    for (int i = 0; i < numParticles; i++) {
+        Particle p;
+
+        // Plummer sphere distribution - denser at center
+        double r = clusterRadius / std::sqrt(std::pow(randomUniform(0.0, 1.0), -2.0/3.0) - 1.0);
+        r = std::min(r, clusterRadius);
+
+        // Random direction in 3D
+        double theta = std::acos(2.0 * randomUniform(0.0, 1.0) - 1.0);
+        double phi = randomUniform(0.0, 2.0 * M_PI);
+
+        p.x = r * std::sin(theta) * std::cos(phi);
+        p.y = r * std::sin(theta) * std::sin(phi);
+        p.z = r * std::cos(theta);
+
+        // Virial velocities - random motion with magnitude dependent on radius
+        double velocityScale = 2.0 / std::sqrt(r + 1.0);
+        double vtheta = std::acos(2.0 * randomUniform(0.0, 1.0) - 1.0);
+        double vphi = randomUniform(0.0, 2.0 * M_PI);
+
+        p.vx = velocityScale * std::sin(vtheta) * std::cos(vphi);
+        p.vy = velocityScale * std::sin(vtheta) * std::sin(vphi);
+        p.vz = velocityScale * std::cos(vtheta);
+
+        p.mass = 1.0;
+        particles.push_back(p);
+    }
+}
+
+void createStableCluster(std::vector<Particle>& particles, int numParticles) {
+    double plummerRadius = 20.0;  // Plummer scale length
+    double particleMass = 1.0;
+    double totalMass = numParticles * particleMass;
+    double G = 1.0;
+
+    // Virial velocity dispersion: sigma^2 = G * M / (6 * a)
+    double velocityDispersion = std::sqrt(G * totalMass / (6.0 * plummerRadius));
+
+    for (int i = 0; i < numParticles; i++) {
+        Particle p;
+
+        // Plummer sphere position distribution
+        double r = plummerRadius / std::sqrt(std::pow(randomUniform(0.001, 1.0), -2.0/3.0) - 1.0);
+
+        // Random direction in 3D (uniform on sphere)
+        double theta = std::acos(2.0 * randomUniform(0.0, 1.0) - 1.0);
+        double phi = randomUniform(0.0, 2.0 * M_PI);
+
+        p.x = r * std::sin(theta) * std::cos(phi);
+        p.y = r * std::sin(theta) * std::sin(phi);
+        p.z = r * std::cos(theta);
+
+        // Maxwell-Boltzmann velocity distribution (virial equilibrium)
+        p.vx = randomNormal(0.0, velocityDispersion);
+        p.vy = randomNormal(0.0, velocityDispersion);
+        p.vz = randomNormal(0.0, velocityDispersion);
+
+        p.mass = particleMass;
         particles.push_back(p);
     }
 }

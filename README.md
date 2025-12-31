@@ -16,7 +16,12 @@ A real-time 3D gravitational N-body simulation implemented in C++ with an intera
   2. **Octree Construction**: Watch the octree being built step-by-step as particles are added
   3. **Octree Structure**: Explore the complete hierarchical tree structure
   4. **Barnes-Hut Calculation**: See how the algorithm approximates forces using the octree
+
+![3D Octree Demo](assets/screenshots/3D_demo.png)
+
 - **2D QuadTree Demo**: Interactive 2D visualization of spatial partitioning
+
+![2D QuadTree Demo](assets/screenshots/2D_demo.png)
 
 ### Realistic Physics Simulation
 - **Multiple Computation Methods**:
@@ -24,10 +29,16 @@ A real-time 3D gravitational N-body simulation implemented in C++ with an intera
   - Barnes-Hut O(n log n) - Optimized octree approximation
 - **5 Astrophysical Scenarios**:
   - Grid (simple 3D grid for testing)
-  - Galaxy Disk (spiral galaxies with rotation)
+  - Binary Stars (orbital dynamics)
+  - Big Bang (explosive particle expansion)
+  - Stable Globular Cluster (virial equilibrium)
   - Keplerian Disk (protoplanetary disks)
   - Black Hole Accretion Disk
   - Galaxy Collision (two galaxies colliding)
+
+| Keplerian Disk | Big Bang |
+|:---:|:---:|
+| ![Keplerian Disk](assets/gifs/keplerdisc.gif) | ![Big Bang](assets/gifs/bigbang.gif) |
 
 ### Advanced Features
 - Real-time method switching (Brute Force ↔ Barnes-Hut)

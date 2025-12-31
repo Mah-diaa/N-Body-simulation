@@ -4,7 +4,7 @@
 #include <cstddef>  // For size_t on Windows/MSVC
 
 
-void calculateForces(std::vector<Particle> &particles, double G){
+void calculateForces(std::vector<Particle> &particles, double G, double softening){
 	    size_t n = particles.size();
     for (size_t i = 0; i < n; ++i) {
 	double fx= 0.0;
@@ -21,7 +21,7 @@ void calculateForces(std::vector<Particle> &particles, double G){
 		double dx = particles[j].x - particles[i].x;
 		double dy = particles[j].y - particles[i].y;
 		double dz = particles[j].z - particles[i].z;
-		double distSqr = dx * dx + dy * dy + dz * dz + 1.0; // Softening factor to avoid singularity (increased from 1e-10)
+		double distSqr = dx * dx + dy * dy + dz * dz + softening; // Softening factor to avoid singularity
 		double invDist = 1.0 / sqrt(distSqr);
 		double invDist3 = invDist * invDist * invDist;
 		double force = G * particles[i].mass * particles [j].mass * invDist3;

@@ -91,6 +91,8 @@ void AlgorithmDemoState::buildVisualOctree() {
 }
 
 void AlgorithmDemoState::insertParticleIntoOctree(int nodeIdx, int particleIdx) {
+    if (nodeIdx >= (int)octreeNodes.size()) return;  // Safety check
+
     VisualOctreeNode& node = octreeNodes[nodeIdx];
 
     if (node.isLeaf && node.particleIndex == -1) {
@@ -100,39 +102,44 @@ void AlgorithmDemoState::insertParticleIntoOctree(int nodeIdx, int particleIdx) 
 
     if (node.isLeaf && node.particleIndex != -1) {
         int oldParticleIdx = node.particleIndex;
-        node.particleIndex = -1;
-        node.isLeaf = false;
+        octreeNodes[nodeIdx].particleIndex = -1;
+        octreeNodes[nodeIdx].isLeaf = false;
 
-        double halfSize = node.size / 2.0;
+        double halfSize = octreeNodes[nodeIdx].size / 2.0;
         double quarterSize = halfSize / 2.0;
+        double x_center = octreeNodes[nodeIdx].x_center;
+        double y_center = octreeNodes[nodeIdx].y_center;
+        double z_center = octreeNodes[nodeIdx].z_center;
+        int depth = octreeNodes[nodeIdx].depth;
 
         for (int i = 0; i < 8; i++) {
             VisualOctreeNode child;
             child.size = halfSize;
-            child.depth = node.depth + 1;
+            child.depth = depth + 1;
 
             int xi = (i & 1);
             int yi = (i & 2) >> 1;
             int zi = (i & 4) >> 2;
 
-            child.x_center = node.x_center + (xi ? quarterSize : -quarterSize);
-            child.y_center = node.y_center + (yi ? quarterSize : -quarterSize);
-            child.z_center = node.z_center + (zi ? quarterSize : -quarterSize);
+            child.x_center = x_center + (xi ? quarterSize : -quarterSize);
+            child.y_center = y_center + (yi ? quarterSize : -quarterSize);
+            child.z_center = z_center + (zi ? quarterSize : -quarterSize);
 
-            node.children[i] = octreeNodes.size();
-            octreeNodes.push_back(child);
+            octreeNodes[nodeIdx].children[i] = octreeNodes.size();
+            octreeNodes.push_back(child);  // This invalidates 'node' reference!
         }
 
         insertParticleIntoOctree(nodeIdx, oldParticleIdx);
     }
 
+    // Re-fetch node data after potential vector reallocation
     const Particle& p = activeParticles[particleIdx];
     int octant = 0;
-    if (p.x > node.x_center) octant |= 1;
-    if (p.y > node.y_center) octant |= 2;
-    if (p.z > node.z_center) octant |= 4;
+    if (p.x > octreeNodes[nodeIdx].x_center) octant |= 1;
+    if (p.y > octreeNodes[nodeIdx].y_center) octant |= 2;
+    if (p.z > octreeNodes[nodeIdx].z_center) octant |= 4;
 
-    insertParticleIntoOctree(node.children[octant], particleIdx);
+    insertParticleIntoOctree(octreeNodes[nodeIdx].children[octant], particleIdx);
 }
 
 void initAlgorithmDemo(AlgorithmDemoState& state) {

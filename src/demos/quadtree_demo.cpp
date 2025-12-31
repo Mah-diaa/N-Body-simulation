@@ -303,6 +303,7 @@ void QuadTreeDemo::renderCalculationPanel(int x, int y, int width, int height) {
     std::string line;
 
     while (std::getline(stream, line)) {
+        if (textY + 20 > y + height - 10) break;  // Stop if text would go outside box
         DrawText(line.c_str(), x + 15, textY, 16, WHITE);
         textY += 20;
     }
@@ -337,7 +338,7 @@ void QuadTreeDemo::render(int screenWidth, int screenHeight) {
     DrawText("SPACE: Add Next Particle | R: Reset | Q: Return to Menu | ESC: Exit", 20, screenHeight - 30, 18, LIGHTGRAY);
 
     int padding = 15;
-    int calcPanelHeight = std::min(180, screenHeight / 5);
+    int calcPanelHeight = std::min(280, screenHeight / 4);
     int topSectionHeight = screenHeight - calcPanelHeight - 130;
     int viewWidth = (screenWidth - 3 * padding) / 2;
 

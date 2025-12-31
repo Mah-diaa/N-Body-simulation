@@ -8,7 +8,9 @@
 // Scenario types
 enum ScenarioType {
     GRID,
-    GALAXY_DISK,
+    BINARY_STARS,
+    GLOBULAR_CLUSTER,
+    STABLE_CLUSTER,
     KEPLERIAN_DISK,
     BLACK_HOLE,
     GALAXY_COLLISION
@@ -32,7 +34,9 @@ void createScenario(std::vector<Particle>& particles, ScenarioType type, int num
 
 // Individual scenario generators
 void createGrid(std::vector<Particle>& particles, int gridSize);
-void createGalaxyDisk(std::vector<Particle>& particles, int numParticles);
+void createBinaryStars(std::vector<Particle>& particles, int numParticles);
+void createGlobularCluster(std::vector<Particle>& particles, int numParticles);
+void createStableCluster(std::vector<Particle>& particles, int numParticles);
 void createKeplerianDisk(std::vector<Particle>& particles, int numParticles);
 void createBlackHole(std::vector<Particle>& particles, int numParticles);
 void createGalaxyCollision(std::vector<Particle>& particles, int particlesPerGalaxy);

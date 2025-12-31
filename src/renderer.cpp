@@ -3,28 +3,26 @@
 #include <iostream>
 #include <cstddef>  // For size_t on Windows/MSVC
 
-void updateCamera(Camera3D& camera, float& cameraAngle, float& cameraDistance) {
-    // Mouse drag to rotate
+void updateCamera(Camera3D& camera, float& cameraAngleH, float& cameraAngleV, float& cameraDistance) {
+    // EXACT COPY from octree demo - rotation
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         Vector2 mouseDelta = GetMouseDelta();
-        cameraAngle -= mouseDelta.x * 0.01f;
+        cameraAngleH -= mouseDelta.x * 0.01f;
+        cameraAngleV += mouseDelta.y * 0.01f;
+
+        if (cameraAngleV < -M_PI/2.0f + 0.1f) cameraAngleV = -M_PI/2.0f + 0.1f;
+        if (cameraAngleV > M_PI/2.0f - 0.1f) cameraAngleV = M_PI/2.0f - 0.1f;
     }
 
-    // Mouse wheel to zoom
+    // EXACT COPY from octree demo - zoom
     cameraDistance -= GetMouseWheelMove() * 5.0f;
-    if (cameraDistance < 10.0f) cameraDistance = 10.0f;
-    if (cameraDistance > 200.0f) cameraDistance = 200.0f;
+    if (cameraDistance < 30.0f) cameraDistance = 30.0f;
+    if (cameraDistance > 800.0f) cameraDistance = 800.0f;
 
-    // Update camera position (orbit around origin)
-    camera.position.x = cameraDistance * cos(cameraAngle);
-    camera.position.z = cameraDistance * sin(cameraAngle);
-    camera.position.y = cameraDistance * 0.5f;
-
-    // WASD to move camera target
-    if (IsKeyDown(KEY_W)) camera.target.y += 1.0f;
-    if (IsKeyDown(KEY_S)) camera.target.y -= 1.0f;
-    if (IsKeyDown(KEY_A)) camera.target.x -= 1.0f;
-    if (IsKeyDown(KEY_D)) camera.target.x += 1.0f;
+    // EXACT COPY from octree demo - camera position calculation
+    camera.position.x = camera.target.x + cameraDistance * cos(cameraAngleV) * cos(cameraAngleH);
+    camera.position.z = camera.target.z + cameraDistance * cos(cameraAngleV) * sin(cameraAngleH);
+    camera.position.y = camera.target.y + cameraDistance * sin(cameraAngleV);
 }
 
 void shootProjectile(std::vector<Particle>& particles, const Camera3D& camera,
@@ -160,28 +158,28 @@ void renderParticles(const std::vector<Particle>& particles, int numStaticPartic
 
 void renderUI(int particleCount, float cameraDistance, int screenHeight,
               const char* methodName, double theta, int simSpeed, const char* scenarioName,
-              int forceCalcs, int rebuildInterval) {
+              int forceCalcs, int rebuildInterval, double softening) {
     DrawText("N-Body Simulation", 10, 10, 20, WHITE);
     DrawText(TextFormat("Scenario: %s", scenarioName), 10, 35, 16, SKYBLUE);
     DrawText(TextFormat("Particles: %d", particleCount), 10, 55, 16, LIGHTGRAY);
     DrawText(TextFormat("Method: %s", methodName), 10, 75, 16, YELLOW);
     DrawText(TextFormat("Theta: %.2f", theta), 10, 95, 16, LIGHTGRAY);
-    DrawText(TextFormat("Sim Speed: %dx", simSpeed), 10, 115, 16, LIGHTGRAY);
-    DrawText(TextFormat("Tree Rebuild: every %d steps", rebuildInterval), 10, 135, 16, ORANGE);
-    DrawText(TextFormat("FPS: %d", GetFPS()), 10, 155, 16, GREEN);
+    DrawText(TextFormat("Softening: %.1f  (set in menu - prevents particle slingshots)", softening), 10, 115, 14, LIGHTGRAY);
+    DrawText(TextFormat("Sim Speed: %dx", simSpeed), 10, 135, 16, LIGHTGRAY);
+    DrawText(TextFormat("Tree Rebuild: every %d steps", rebuildInterval), 10, 155, 16, ORANGE);
+    DrawText(TextFormat("FPS: %d", GetFPS()), 10, 175, 16, GREEN);
 
     // Show force calculations vs brute force comparison
     int bruteForceCalcs = particleCount * particleCount;
     if (forceCalcs > 0) {
         float savings = 100.0f * (1.0f - (float)forceCalcs / bruteForceCalcs);
-        DrawText(TextFormat("Force Calcs: %d (%.1f%% saved)", forceCalcs, savings), 10, 175, 14, ORANGE);
-        DrawText(TextFormat("vs Brute Force: %d", bruteForceCalcs), 10, 190, 12, GRAY);
+        DrawText(TextFormat("Force Calcs: %d (%.1f%% saved)", forceCalcs, savings), 10, 195, 14, ORANGE);
+        DrawText(TextFormat("vs Brute Force: %d", bruteForceCalcs), 10, 210, 12, GRAY);
     }
 
-    DrawText("Controls:", 10, screenHeight - 215, 14, GRAY);
-    DrawText("Mouse Drag: Rotate", 10, screenHeight - 195, 12, GRAY);
-    DrawText("Mouse Wheel: Zoom", 10, screenHeight - 180, 12, GRAY);
-    DrawText("WASD: Move target", 10, screenHeight - 165, 12, GRAY);
+    DrawText("Controls:", 10, screenHeight - 200, 14, GRAY);
+    DrawText("Mouse Drag: Rotate", 10, screenHeight - 180, 12, GRAY);
+    DrawText("Mouse Wheel: Zoom", 10, screenHeight - 165, 12, GRAY);
     DrawText("M: Toggle method", 10, screenHeight - 150, 12, GRAY);
     DrawText("T: Toggle trails", 10, screenHeight - 135, 12, GRAY);
     DrawText("H: Hide UI overlay", 10, screenHeight - 120, 12, GRAY);

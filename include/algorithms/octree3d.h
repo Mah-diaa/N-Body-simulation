@@ -41,7 +41,7 @@ public:
     void build(std::vector<Particle>& particles);
 
     // Calculate forces using Barnes-Hut
-    void calculateForces(std::vector<Particle>& particles, double G, double theta);
+    void calculateForces(std::vector<Particle>& particles, double G, double theta, double softening = 0.1);
 
     // Get profiling stats
     void getStats(int& forceCalcs, int& traversals) const {
@@ -70,14 +70,14 @@ private:
     // Force calculation
     void calculateForceOnParticle(Particle& p, size_t particleIdx, int nodeIdx,
                                   const std::vector<Particle>& particles,
-                                  double G, double theta);
+                                  double G, double theta, double softening);
 };
 
 // ========== Global Interface Functions ==========
 // Simple interface for Barnes-Hut simulation
 
 // Calculate forces using Barnes-Hut algorithm
-void calculateForcesBarnesHut(std::vector<Particle>& particles, double G, double theta);
+void calculateForcesBarnesHut(std::vector<Particle>& particles, double G, double theta, double softening = 0.1);
 
 // Profiling: Get Barnes-Hut statistics
 void getBarnesHutStats(int& forceCalcs, int& traversals);

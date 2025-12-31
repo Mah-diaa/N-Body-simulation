@@ -36,6 +36,7 @@ void renderMenu(int screenWidth, int screenHeight,
                 int& selectedScenarioIndex,
                 int& particleCount,
                 bool& trailsEnabled,
+                double& softening,
                 bool& startSimulation,
                 bool& startDemo,
                 bool& startQuadTreeDemo);

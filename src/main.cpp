@@ -69,6 +69,7 @@ int main() {
     double dt = 0.01;
     SimulationMethod method = BARNES_HUT;
     double theta = 1.2;  // Barnes-Hut accuracy parameter (1.0-1.2 is optimal balance)
+    double softening = 0.1;  // Softening parameter to prevent singularities
     int simStepsPerFrame = 1;
     int numStaticParticles = 0;
     double projectileSpeed = 5.0;
@@ -90,7 +91,8 @@ int main() {
     camera.projection = CAMERA_PERSPECTIVE;
 
     // Camera control variables
-    float cameraAngle = 0.0f;
+    float cameraAngleH = 0.0f;
+    float cameraAngleV = 0.3f;  // Slight angle down
     float cameraDistance = 70.0f;
 
     // Main game loop
@@ -121,7 +123,8 @@ int main() {
                 // Reset camera
                 camera.position = (Vector3){ 50.0f, 50.0f, 50.0f };
                 camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
-                cameraAngle = 0.0f;
+                cameraAngleH = 0.0f;
+                cameraAngleV = 0.3f;
                 cameraDistance = 70.0f;
 
                 // Clear trails
@@ -151,7 +154,7 @@ int main() {
             BeginDrawing();
             renderMenu(screenWidth, screenHeight, scenarios,
                       selectedScenarioIndex, particleCount,
-                      trailsEnabled, startSimulation, startDemo, startQuadTreeDemo);
+                      trailsEnabled, softening, startSimulation, startDemo, startQuadTreeDemo);
             EndDrawing();
         }
 
@@ -161,9 +164,9 @@ int main() {
             for (int step = 0; step < simStepsPerFrame; step++) {
                 // Use selected method
                 if (method == BRUTE_FORCE) {
-                    calculateForces(particles, G);
+                    calculateForces(particles, G, softening);
                 } else if (method == BARNES_HUT) {
-                    calculateForcesBarnesHut(particles, G, theta);
+                    calculateForcesBarnesHut(particles, G, theta, softening);
                 }
                 updateParticles(particles, dt);
             }
@@ -174,7 +177,7 @@ int main() {
             }
 
         // Camera update
-        updateCamera(camera, cameraAngle, cameraDistance);
+        updateCamera(camera, cameraAngleH, cameraAngleV, cameraDistance);
 
         // Input handling
         if (IsKeyPressed(KEY_SPACE)) {
@@ -287,7 +290,7 @@ int main() {
             // Only render UI if visible
             if (uiVisible) {
                 renderUI(particles.size(), cameraDistance, screenHeight, methodName, theta, simStepsPerFrame,
-                         scenarios[selectedScenarioIndex].name.c_str(), forceCalcs, getTreeRebuildInterval());
+                         scenarios[selectedScenarioIndex].name.c_str(), forceCalcs, getTreeRebuildInterval(), softening);
             }
 
             EndDrawing();

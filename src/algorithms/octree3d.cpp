@@ -291,7 +291,7 @@ void OptimizedOctree::updateCenterOfMass(int nodeIdx) {
 }
 
 // Calculate forces using optimized Barnes-Hut
-void OptimizedOctree::calculateForces(std::vector<Particle>& particles, double G, double theta) {
+void OptimizedOctree::calculateForces(std::vector<Particle>& particles, double G, double theta, double softening) {
     m_forceCalculations = 0;
     m_treeTraversals = 0;
 
@@ -306,14 +306,14 @@ void OptimizedOctree::calculateForces(std::vector<Particle>& particles, double G
 
     // Calculate forces for each particle (pass index explicitly to avoid pointer arithmetic issues)
     for (size_t i = 0; i < particles.size(); i++) {
-        calculateForceOnParticle(particles[i], i, 0, particles, G, theta);
+        calculateForceOnParticle(particles[i], i, 0, particles, G, theta, softening);
     }
 }
 
 // Calculate force on a single particle using optimized traversal
 void OptimizedOctree::calculateForceOnParticle(Particle& p, size_t particleIdx, int nodeIdx,
                                                const std::vector<Particle>& particles,
-                                               double G, double theta) {
+                                               double G, double theta, double softening) {
     m_treeTraversals++;
 
     if (nodeIdx >= (int)m_nodes.size()) return;
@@ -347,7 +347,7 @@ void OptimizedOctree::calculateForceOnParticle(Particle& p, size_t particleIdx, 
         // Use this node as a single body
         m_forceCalculations++;
 
-        double dist = std::sqrt(distSqr + 1.0); // Softening
+        double dist = std::sqrt(distSqr + softening); // Softening
         double invDist3 = 1.0 / (dist * dist * dist);
         double force = G * node.mass * invDist3;
 
@@ -360,7 +360,7 @@ void OptimizedOctree::calculateForceOnParticle(Particle& p, size_t particleIdx, 
         for (int i = 0; i < 8; i++) {
             int childIdx = firstChildIdx + i;
             if (childIdx < (int)m_nodes.size()) {
-                calculateForceOnParticle(p, particleIdx, childIdx, particles, G, theta);
+                calculateForceOnParticle(p, particleIdx, childIdx, particles, G, theta, softening);
             }
         }
     }
@@ -381,7 +381,7 @@ static int g_forceCalculations = 0;
 static int g_treeTraversals = 0;
 
 // Calculate forces for all particles using Barnes-Hut (OPTIMIZED)
-void calculateForcesBarnesHut(std::vector<Particle>& particles, double G, double theta) {
+void calculateForcesBarnesHut(std::vector<Particle>& particles, double G, double theta, double softening) {
     // PERFORMANCE OPTIMIZATION: Only rebuild tree every N steps
     // This trades some accuracy for much better performance
     if (g_stepsSinceRebuild == 0) {
@@ -392,7 +392,7 @@ void calculateForcesBarnesHut(std::vector<Particle>& particles, double G, double
         g_stepsSinceRebuild = 0;
     }
 
-    g_optimizedTree.calculateForces(particles, G, theta);
+    g_optimizedTree.calculateForces(particles, G, theta, softening);
 
     // Update profiling stats
     g_optimizedTree.getStats(g_forceCalculations, g_treeTraversals);
