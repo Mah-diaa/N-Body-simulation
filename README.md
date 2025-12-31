@@ -100,26 +100,19 @@ Controls the accuracy-speed tradeoff:
 ```
 nbody/
 ├── src/
-│   ├── algorithms/              # Pure algorithm implementations
-│   │   ├── octree3d.cpp         # Barnes-Hut 3D octree (O(n log n))
-│   │   └── quadtree2d.cpp       # Barnes-Hut 2D quadtree (O(n log n))
-│   ├── demos/                   # Educational visualizations
-│   ├── main.cpp, simulation.cpp, renderer.cpp, scenarios.cpp, menu.cpp
+│   ├── algorithms/
+│   │   ├── octree3d.cpp         # Barnes-Hut 3D (flat vector, implicit indexing)
+│   │   └── quadtree2d.cpp       # Barnes-Hut 2D (educational demo)
+│   ├── demos/
+│   └── main.cpp, simulation.cpp, renderer.cpp, scenarios.cpp, menu.cpp
 │
 ├── include/
-│   ├── algorithms/              # Algorithm headers
-│   │   ├── octree3d.h
-│   │   └── quadtree2d.h
-│   ├── demos/                   # Demo headers
+│   ├── algorithms/
+│   ├── demos/
 │   └── particle.h, simulation.h, renderer.h, scenarios.h, menu.h
 │
-├── CMakeLists.txt, build.sh, run.sh
-└── build/                       # Build output
+└── CMakeLists.txt, build.sh, run.sh
 ```
-
-**Key Algorithms:**
-- **octree3d**: 3D spatial partitioning for Barnes-Hut algorithm with flat vector storage and implicit child indexing
-- **quadtree2d**: 2D spatial partitioning for educational visualization with center of mass calculation
 
 </details>
 
