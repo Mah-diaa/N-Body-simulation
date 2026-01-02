@@ -28,17 +28,12 @@ add_executable(nbody ${SOURCES})
 # Include directories
 target_include_directories(nbody PRIVATE include)
 
-# Find and link raylib
-find_package(raylib QUIET)
-if (NOT raylib_FOUND)
-    # If raylib is not found via CMake, try pkg-config
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(RAYLIB REQUIRED raylib)
-    target_include_directories(nbody PRIVATE ${RAYLIB_INCLUDE_DIRS})
-    target_link_libraries(nbody ${RAYLIB_LIBRARIES})
-else()
-    target_link_libraries(nbody raylib)
-endif()
+# Find and link raylib using pkg-config (works with system-installed raylib)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(RAYLIB REQUIRED raylib)
+target_include_directories(nbody PRIVATE ${RAYLIB_INCLUDE_DIRS})
+target_link_directories(nbody PRIVATE ${RAYLIB_LIBRARY_DIRS})
+target_link_libraries(nbody ${RAYLIB_LIBRARIES})
 
 # Optimization flags for Release build
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
