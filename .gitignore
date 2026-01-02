@@ -37,3 +37,25 @@ __pycache__/
 
 # Executable
 nbody
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.vrb
+*.synctex.gz
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.pdf
+*.dvi
+*.ps
+*.synctex(busy)
+
+# Presentation files
+presentation.tex
+presentation_assets/

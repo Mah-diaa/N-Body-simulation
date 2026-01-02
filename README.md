@@ -127,8 +127,8 @@ nbody/
 
 **Installation (Linux)**:
 ```bash
-# Ubuntu/Debian
-sudo apt install libraylib-dev
+# Ubuntu/Debian - Install raylib dependencies
+sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
 ```
 
 ### CMake
@@ -141,8 +141,8 @@ sudo apt install libraylib-dev
 
 ### Prerequisites
 ```bash
-# Ubuntu/Debian
-sudo apt install cmake g++ libraylib-dev
+# Ubuntu/Debian - Install build tools and raylib dependencies
+sudo apt install cmake g++ libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
 ```
 
 ### Build & Run

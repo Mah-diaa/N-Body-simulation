@@ -232,17 +232,20 @@ $O(n^2) \rightarrow O(n \log n)$ --- 30-250x Speedup!
 \end{exampleblock}
 \end{frame}
 
-\begin{frame}{Barnes-Hut: 4 Schritte}
+\begin{frame}{Barnes-Hut: 3 Schritte}
 \begin{center}
 \large
 \textbf{Wie funktioniert Barnes-Hut?}
 \end{center}
 
 \begin{enumerate}
-    \item \textbf{Schritt 1}: QuadTree/Octree aufbauen
-    \item \textbf{Schritt 2}: Partikel in Baum einfügen
-    \item \textbf{Schritt 3}: Massenschwerpunkte berechnen
-    \item \textbf{Schritt 4}: Kräfte mit Theta-Kriterium berechnen
+    \item \textbf{Schritt 1}: Octree aufbauen durch Partikel-Einfügen
+    \begin{itemize}
+        \item Baum entsteht rekursiv beim Einfügen jedes Partikels
+        \item Subdivision bei $>1$ Partikel pro Knoten
+    \end{itemize}
+    \item \textbf{Schritt 2}: Massenschwerpunkte berechnen
+    \item \textbf{Schritt 3}: Kräfte mit Theta-Kriterium berechnen
 \end{enumerate}
 
 \vspace{0.5cm}
@@ -252,7 +255,7 @@ Wir erklären jeden Schritt \textbf{im Detail} mit Visualisierungen!
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Schritt 1: Baum aufbauen}
+\section{Schritt 1: Octree aufbauen durch Partikel-Einfügen}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Schritt 1.1: QuadTree (2D) - Konzept}
@@ -309,46 +312,155 @@ Wir erklären jeden Schritt \textbf{im Detail} mit Visualisierungen!
 \end{exampleblock}
 \end{frame}
 
-\begin{frame}{Schritt 1.1: QuadTree Aufbau - Visualisierung}
-\begin{center}
-\textbf{\Large [SCREENSHOT PLACEHOLDER]}
+\begin{frame}{QuadTree: Partikel einfügen}
+\begin{block}{Algorithmus}
+\textbf{So entsteht der Baum:}
+\end{block}
 
-\vspace{0.3cm}
-\textit{Interaktive 2D QuadTree Visualisierung}
-
-\vspace{0.5cm}
-\fbox{\parbox{0.8\textwidth}{
-\textbf{Zu zeigen:}
-\begin{itemize}
-    \item Leerer Raum zu Beginn
-    \item Erste Unterteilung in 4 Quadranten
-    \item Rekursive weitere Unterteilungen
-    \item Finale Baumstruktur
-\end{itemize}
-}}
-\end{center}
-
-\begin{alertblock}{Screenshot benötigt}
-2D QuadTree Demo - Schrittweiser Aufbau
-\end{alertblock}
+\begin{enumerate}
+    \item \textbf{Finde Bounding Box}: Min/Max x, y aller Partikel
+    \item \textbf{Erstelle Wurzel}: Knoten der alle Partikel enthält
+    \item \textbf{Rekursives Einfügen}:
+    \begin{itemize}
+        \item Falls Knoten leer $\rightarrow$ Partikel direkt einfügen
+        \item Falls $\leq 1$ Partikel $\rightarrow$ Blattknoten, fertig!
+        \item Falls $> 1$ Partikel $\rightarrow$ Unterteile in \textbf{4 Quadranten}
+        \item Bestimme Quadrant des Partikels (x, y Vergleich)
+        \item Rekursiere in korrekten Quadranten
+    \end{itemize}
+\end{enumerate}
 \end{frame}
 
-\begin{frame}{Schritt 1.2: Octree (3D) - Erweiterung}
+\begin{frame}[fragile]{QuadTree-Aufbau: Pseudocode}
+\begin{lstlisting}[language=Python, basicstyle=\footnotesize\ttfamily]
+function subdivide(node):
+    // Basisfall: <= 1 Partikel -> Fertig
+    if node.particleCount <= 1:
+        node.isLeaf = true
+        return
+
+    // Erstelle 4 Kinder (halbe Grosse)
+    for quadrant = 0 to 3:
+        child = createChild()
+        child.size = node.size / 2
+        child.center = berechnePosition(quadrant, node.center)
+
+    // Verteile Partikel auf Kinder
+    for particle in node:
+        quadrant = findQuadrant(particle, node.center)
+        children[quadrant].add(particle)
+
+    // Rekursion: Wiederhole fur alle Kinder
+    for child in children:
+        subdivide(child)
+\end{lstlisting}
+
+\textbf{Kernidee:} Teile Raum in 4 Teile, verteile Partikel, rekursiere!
+\end{frame}
+
+\begin{frame}[fragile]{Quadranten-Berechnung}
+\begin{block}{Zu welchem Quadranten gehört ein Partikel?}
+Vergleiche Position mit Knoten-Zentrum
+\end{block}
+
+\begin{lstlisting}[basicstyle=\small\ttfamily]
+int getQuadrant(Particle p, Vector2 center) {
+    int quadrant = 0;
+    if (p.x >= center.x) quadrant |= 1;  // x-Richtung
+    if (p.y >= center.y) quadrant |= 2;  // y-Richtung
+    return quadrant;  // 0-3
+}
+\end{lstlisting}
+
+\begin{center}
+\begin{tabular}{c|cc|l}
+\textbf{Quadrant} & \textbf{x} & \textbf{y} & \textbf{Bezeichnung} \\ \hline
+0 & - & - & SW (Südwest) \\
+1 & + & - & SO (Südost) \\
+2 & - & + & NW (Nordwest) \\
+3 & + & + & NO (Nordost)
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{QuadTree: Datenstruktur}
+\begin{lstlisting}[basicstyle=\small\ttfamily]
+struct QuadTreeNode {
+    // Bounding Box
+    Vector2 center;
+    double size;
+
+    // Massendaten
+    double mass;
+    Vector2 centerOfMass;  // COM
+
+    // Baumstruktur
+    int firstChild;     // Index des ersten Kinds
+                        // Kinder: [firstChild + quadrant]
+                        // quadrant = 0-3 (berechnet on-the-fly)
+    int particleIndex;  // Falls Blatt: Partikel-ID
+    bool isLeaf;
+};
+\end{lstlisting}
+
+\begin{itemize}
+    \item \textbf{Interne Knoten}: 4 Kinder sequenziell gespeichert
+    \item \textbf{Blattknoten}: Enthalten $\leq 1$ Partikel
+    \item \textbf{Zugriff}: \texttt{children[firstChild + quadrant]}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{QuadTree Aufbau - Demo}
+\begin{columns}
+\column{0.6\textwidth}
+\begin{center}
+\only<1>{\includegraphics[width=\textwidth]{assets/quadtree_build1.png}}
+\only<2>{\includegraphics[width=\textwidth]{assets/quadtree_build2.png}}
+\only<3>{\includegraphics[width=\textwidth]{assets/quadtree_build3.png}}
+\only<4>{\includegraphics[width=\textwidth]{assets/quadtree_build4.png}}
+\only<5>{\includegraphics[width=\textwidth]{assets/quadtree_build5.png}}
+\only<6>{\includegraphics[width=\textwidth]{assets/quadtree_build6.png}}
+\end{center}
+
+\column{0.4\textwidth}
+\textbf{Wichtige Regeln:}
+\begin{itemize}
+    \item Jedes Quad kann nur 1 Körper enthalten
+    \item Bei $>1$ Körper: Quad wird geteilt
+    \item Start mit Bounding Box aller Partikel
+    \item Rekursive Unterteilung in 4 Quadranten
+    \item Stopp bei $\leq 1$ Partikel pro Quad
+    \item Erzeugt hierarchische Baumstruktur
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Octree: Von 2D zu 3D}
 \begin{columns}
 \column{0.5\textwidth}
-\textbf{Gleiches Prinzip in 3D}
-\begin{itemize}
-    \item 3D-Raum rekursiv unterteilen
-    \item Jeder Knoten hat \textbf{8 Kinder}
-    \item Stopp bei $\leq 1$ Partikel
-\end{itemize}
+\textbf{Der einzige Unterschied:}
 
 \vspace{0.3cm}
-\textbf{8 Oktanten:}
-\begin{itemize}
-    \item $2 \times 2 \times 2$ Würfel
-    \item Unterteilung entlang x, y, z
-\end{itemize}
+\begin{center}
+\begin{tabular}{l|c|c}
+& \textbf{QuadTree} & \textbf{Octree} \\ \hline
+Dimensionen & 2D (x, y) & 3D (x, y, z) \\
+Kinder & \textbf{4} & \textbf{8} \\
+Unterteilung & 4 Quadranten & 8 Oktanten \\
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Oktanten-Berechnung (binär):}
+\begin{lstlisting}[basicstyle=\tiny\ttfamily]
+int octant = 0;
+if (p.x >= center.x) octant |= 1;
+if (p.y >= center.y) octant |= 2;
+if (p.z >= center.z) octant |= 4;
+// octant = 0-7
+\end{lstlisting}
+\small Bitweise OR-Operation: \\
+\textcolor{blue}{z-Achse (4) + y-Achse (2) + x-Achse (1)}
 
 \column{0.5\textwidth}
 \begin{center}
@@ -380,180 +492,46 @@ Wir erklären jeden Schritt \textbf{im Detail} mit Visualisierungen!
 \fill[red] (0.5,0.5,0.5) circle (2pt);
 \fill[red] (2.5,2.5,2.5) circle (2pt);
 \end{tikzpicture}
+
+\vspace{0.3cm}
+\small $2 \times 2 \times 2 = 8$ Oktanten
 \end{center}
 \end{columns}
-
-\begin{block}{Für echte N-Body Simulation}
-Octree wird für realistische 3D-Simulationen verwendet
-\end{block}
 \end{frame}
 
-\begin{frame}{Schritt 1.2: Octree - Visualisierung}
+\begin{frame}{Octree - 3D Demo}
 \begin{center}
-\textbf{\Large [SCREENSHOT PLACEHOLDER]}
+\vspace{2cm}
+{\Huge \textbf{LIVE DEMO}}
 
-\vspace{0.3cm}
-\textit{3D Octree Struktur}
+\vspace{1cm}
+{\Large 3D Octree Visualisierung}
 
 \vspace{0.5cm}
-\fbox{\parbox{0.8\textwidth}{
-\textbf{Zu zeigen:}
 \begin{itemize}
-    \item 3D-Würfel mit 8 Oktanten
-    \item Hierarchische Struktur sichtbar
-    \item Verschiedene Tiefenstufen
-    \item Partikelverteilung im Raum
+    \item Interaktive 3D-Darstellung
+    \item Hierarchische Baumstruktur
+    \item Schrittweises Einfügen von Partikeln
 \end{itemize}
-}}
-\end{center}
-
-\begin{alertblock}{Screenshot benötigt}
-3D Octree Demo - Baumstruktur Visualisierung
-\end{alertblock}
-\end{frame}
-
-\begin{frame}[fragile]{Octree: Datenstruktur}
-\begin{lstlisting}
-struct OctreeNode {
-    // Bounding Box
-    Vector3 center;
-    double size;
-
-    // Massendaten
-    double mass;
-    Vector3 centerOfMass;  // COM
-
-    // Baumstruktur
-    int firstChild;     // Index des ersten Kinds
-    int particleIndex;  // Falls Blatt: Partikel-ID
-    bool isLeaf;
-};
-\end{lstlisting}
-
-\begin{itemize}
-    \item \textbf{Interne Knoten}: Enthalten 8 Kinder (Oktanten)
-    \item \textbf{Blattknoten}: Enthalten $\leq 1$ Partikel
-\end{itemize}
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Schritt 2: Partikel einfügen}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{frame}{Schritt 2: Partikel in den Baum einfügen}
-\begin{block}{Algorithmus}
-\textbf{Für jeden Partikel:}
-\end{block}
-
-\begin{enumerate}
-    \item \textbf{Finde Bounding Box}: Min/Max x, y, z aller Partikel
-    \item \textbf{Erstelle Wurzel}: Knoten der alle Partikel enthält
-    \item \textbf{Rekursives Einfügen}:
-    \begin{itemize}
-        \item Falls Knoten leer $\rightarrow$ Partikel direkt einfügen
-        \item Falls $\leq 1$ Partikel $\rightarrow$ Blattknoten, fertig!
-        \item Falls $> 1$ Partikel $\rightarrow$ Unterteile in 8 Oktanten
-        \item Bestimme Oktant des Partikels (x, y, z Vergleich)
-        \item Rekursiere in korrekten Oktanten
-    \end{itemize}
-\end{enumerate}
-\end{frame}
-
-\begin{frame}[fragile]{Octree-Aufbau: Code}
-\begin{lstlisting}[basicstyle=\tiny\ttfamily]
-void subdivide(OctreeNode& node) {
-    if (node.particleCount <= 1) {
-        node.isLeaf = true;
-        return;  // Stopp
-    }
-
-    // Erstelle 8 Kinder
-    double quarter = node.size / 4.0;
-    for (int i = 0; i < 8; i++) {
-        int childIdx = createChild();
-        children[childIdx].center.x = node.center.x +
-            ((i & 1) ? quarter : -quarter);
-        children[childIdx].center.y = node.center.y +
-            ((i & 2) ? quarter : -quarter);
-        children[childIdx].center.z = node.center.z +
-            ((i & 4) ? quarter : -quarter);
-        children[childIdx].size = node.size / 2.0;
-    }
-
-    // Verteile Partikel auf Kinder
-    distributeParticles(node);
-
-    // Rekursiere
-    for (int i = 0; i < 8; i++)
-        subdivide(children[node.firstChild + i]);
-}
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]{Oktanten-Berechnung}
-\begin{block}{Zu welchem Oktanten gehört ein Partikel?}
-Vergleiche Position mit Knoten-Zentrum
-\end{block}
-
-\begin{lstlisting}
-int getOctant(Particle p, Vector3 center) {
-    int octant = 0;
-    if (p.x >= center.x) octant |= 1;  // x-Richtung
-    if (p.y >= center.y) octant |= 2;  // y-Richtung
-    if (p.z >= center.z) octant |= 4;  // z-Richtung
-    return octant;  // 0-7
-}
-\end{lstlisting}
-
-\begin{center}
-\begin{tabular}{c|ccc}
-\textbf{Oktant} & \textbf{x} & \textbf{y} & \textbf{z} \\ \hline
-0 & - & - & - \\
-1 & + & - & - \\
-2 & - & + & - \\
-3 & + & + & - \\
-4 & - & - & + \\
-... & ... & ... & ...
-\end{tabular}
 \end{center}
 \end{frame}
 
-\begin{frame}{Schritt 2: Visualisierung - Partikel einfügen}
-\begin{center}
-\textbf{\Large [SCREENSHOT PLACEHOLDER]}
-
-\vspace{0.3cm}
-\textit{Schrittweises Einfügen von Partikeln}
-
-\vspace{0.5cm}
-\fbox{\parbox{0.8\textwidth}{
-\textbf{Zu zeigen:}
-\begin{itemize}
-    \item Leerer Baum zu Beginn
-    \item Erstes Partikel wird eingefügt
-    \item Zweites Partikel $\rightarrow$ Subdivision
-    \item Weitere Partikel $\rightarrow$ Baum wächst
-    \item Animation des rekursiven Einfügens
-\end{itemize}
-}}
-\end{center}
-
-\begin{alertblock}{Screenshot benötigt}
-Octree Demo - Schrittweises Einfügen von Partikeln
-\end{alertblock}
-\end{frame}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Schritt 3: Massenschwerpunkt berechnen}
+\section{Schritt 2: Massenschwerpunkt berechnen}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{Schritt 3: Massenschwerpunkt (Center of Mass)}
+\begin{frame}{Schritt 2: Massenschwerpunkt (Center of Mass)}
 \begin{block}{Warum wichtig?}
 Erlaubt uns, ganze Regionen als \textbf{einzelnen Punkt} zu behandeln
 \end{block}
 
+\begin{alertblock}{Wann wird berechnet?}
+COM wird \textbf{während des Baum-Aufbaus} berechnet! \\
+Nach jeder Partikel-Einfügung wird COM inkrementell aktualisiert.
+\end{alertblock}
+
 \begin{block}{Bottom-Up Berechnung}
-Nach Octree-Aufbau, von Blättern zur Wurzel:
+Von Blättern zur Wurzel:
 \end{block}
 
 \textbf{Blattknoten:}
@@ -569,90 +547,64 @@ m_{\text{total}} &= \sum_{i=1}^{8} m_{\text{child},i} \\
 (Analog für y, z)
 \end{frame}
 
-\begin{frame}[fragile]{Massenschwerpunkt: Code}
-\begin{lstlisting}
-void updateCenterOfMass(OctreeNode& node) {
-    if (node.isLeaf) {
-        node.mass = particles[node.particleIndex].mass;
-        node.COM = particles[node.particleIndex].position;
-    } else {
-        double totalMass = 0.0;
-        Vector3 weightedPos(0, 0, 0);
+\begin{frame}[fragile]{Massenschwerpunkt: Pseudocode}
+\begin{lstlisting}[language=Python, basicstyle=\footnotesize\ttfamily]
+function updateCenterOfMass(node):
+    if node.isLeaf:
+        node.mass = particle.mass
+        node.COM = particle.position
+    else:
+        // Rekursion: Kinder zuerst (bottom-up)
+        for i = 0 to 3:
+            updateCenterOfMass(children[node.firstChild + i])
 
-        for (int i = 0; i < 8; i++) {
-            OctreeNode& child = children[node.firstChild + i];
-            if (child.mass > 0) {
-                totalMass += child.mass;
-                weightedPos += child.mass * child.COM;
-            }
-        }
+        // Summiere 4 Kinder
+        totalMass = 0
+        weightedPos = (0, 0)
+        for i = 0 to 3:
+            totalMass += child[i].mass
+            weightedPos += child[i].mass * child[i].COM
 
-        node.mass = totalMass;
-        if (totalMass > 0)
-            node.COM = weightedPos / totalMass;
-    }
-}
+        node.mass = totalMass
+        node.COM = weightedPos / totalMass
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Schritt 3: Visualisierung - Massenschwerpunkt-Propagation}
+\begin{frame}{Schritt 2: Visualisierung - Massenschwerpunkt-Propagation}
 \begin{center}
-\textbf{\Large [SCREENSHOT PLACEHOLDER]}
+\textit{Baum-Aufbau \hspace{3cm} COM Propagation}
 
 \vspace{0.3cm}
-\textit{Bottom-Up Berechnung der Massenschwerpunkte}
-
-\vspace{0.5cm}
-\fbox{\parbox{0.8\textwidth}{
-\textbf{Zu zeigen:}
-\begin{itemize}
-    \item Blattknoten mit Partikelmasse markiert
-    \item Massenschwerpunkt propagiert nach oben
-    \item Farbcodierung nach Gesamtmasse
-    \item Animation der Bottom-Up Berechnung
-    \item Finale COM-Positionen aller Knoten
-\end{itemize}
-}}
-\end{center}
-
-\begin{alertblock}{Screenshot benötigt}
-Octree mit Center of Mass Visualisierung
-\end{alertblock}
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Schritt 4: Kräfte berechnen}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{frame}{Schritt 4: Barnes-Hut Traversierung}
-\begin{block}{Für jeden Partikel: Traversiere Octree}
-Starte bei Wurzel, entscheide rekursiv: \\
-\textbf{Approximieren} oder \textbf{weiter unterteilen}?
-\end{block}
-
+\begin{columns}
+\column{0.5\textwidth}
 \begin{center}
-\begin{tikzpicture}[
-  level 1/.style={sibling distance=40mm},
-  level 2/.style={sibling distance=20mm},
-  every node/.style={circle, draw, minimum size=8mm}
-]
-\node[fill=blue!20] {Root}
-  child {node[fill=green!20] {OK}
-    child {node {...}}
-    child {node {...}}
-  }
-  child {node[fill=red!20] {Zu nah}
-    child {node[fill=green!20] {OK}}
-    child {node[fill=green!20] {OK}}
-  };
-\end{tikzpicture}
+\only<1>{\includegraphics[width=\textwidth]{assets/quadtree_build1.png}}
+\only<2>{\includegraphics[width=\textwidth]{assets/quadtree_build2.png}}
+\only<3>{\includegraphics[width=\textwidth]{assets/quadtree_build3.png}}
+\only<4>{\includegraphics[width=\textwidth]{assets/quadtree_build4.png}}
+\only<5>{\includegraphics[width=\textwidth]{assets/quadtree_build5.png}}
+\only<6>{\includegraphics[width=\textwidth]{assets/quadtree_build6.png}}
 \end{center}
 
-\begin{itemize}
-    \item \textcolor{green!50!black}{Grün}: Approximieren (als Punktmasse)
-    \item \textcolor{red}{Rot}: Zu nah $\rightarrow$ rekursiere in Kinder
-\end{itemize}
+\column{0.5\textwidth}
+\begin{center}
+\only<1>{\includegraphics[width=\textwidth]{assets/propagation1.png}}
+\only<2>{\includegraphics[width=\textwidth]{assets/propagation2.png}}
+\only<3>{\includegraphics[width=\textwidth]{assets/propagation3.png}}
+\only<4>{\includegraphics[width=\textwidth]{assets/propagation4.png}}
+\only<5>{\includegraphics[width=\textwidth]{assets/propagation5.png}}
+\only<6>{\includegraphics[width=\textwidth]{assets/propagation6.png}}
+\end{center}
+\end{columns}
+
+\vspace{0.3cm}
+\only<1>{\small Selbe Baum-Struktur: Links zeigt räumliche Aufteilung, rechts zeigt Massen-Propagation}
+\end{center}
 \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Schritt 3: Kräfte berechnen}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Theta-Kriterium ($\theta$-criterion)}
 \begin{block}{Entscheidungsregel}
@@ -735,29 +687,24 @@ void calculateForce(Particle& p, OctreeNode& node, double theta) {
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}{Schritt 4: Visualisierung - Kraft-Berechnung}
+\begin{frame}{Schritt 3: Barnes-Hut Traversierung}
 \begin{center}
-\textbf{\Large [SCREENSHOT PLACEHOLDER]}
+\vspace{1.5cm}
+{\Huge \textbf{LIVE DEMO}}
 
-\vspace{0.3cm}
-\textit{Barnes-Hut Traversierung mit Theta-Kriterium}
+\vspace{1cm}
+{\Large Barnes-Hut Kraft-Berechnung}
 
 \vspace{0.5cm}
-\fbox{\parbox{0.8\textwidth}{
-\textbf{Zu zeigen:}
 \begin{itemize}
-    \item Ein Partikel ausgewählt (rot markiert)
-    \item Traversierung durch den Baum visualisiert
-    \item Grüne Knoten: Approximiert (s/d < $\theta$)
-    \item Rote Knoten: Zu nah, weiter rekursieren
-    \item Vergleich: Unterschiedliche $\theta$-Werte
+    \item Traversierung visualisiert
+    \item Start bei Wurzel
+    \item Theta-Kriterium in Aktion
+    \item \textcolor{green!50!black}{Grün}: Approximiert (far enough)
+    \item \textcolor{red}{Rot}: Zu nah (recurse deeper)
+    \item Vergleich: Verschiedene $\theta$-Werte
 \end{itemize}
-}}
 \end{center}
-
-\begin{alertblock}{Screenshot benötigt}
-Kraft-Berechnung Visualisierung mit Theta-Kriterium
-\end{alertblock}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -868,51 +815,25 @@ Für langsam bewegende Systeme: Höhere Intervalle OK
 \section{Demo \& Ergebnisse}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{Live-Demo: 3D Octree Visualisierung}
+\begin{frame}{Live Simulationen - Demo}
 \begin{center}
-\includegraphics[width=0.85\textwidth]{assets/screenshots/3D_demo.png}
-\end{center}
+\vspace{2cm}
+{\Huge \textbf{LIVE DEMO}}
 
-\begin{itemize}
-    \item Octree-Struktur in 3D visualisiert
-    \item Hierarchische Raumpartitionierung sichtbar
-    \item Educational Walkthrough Mode
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Live-Demo: 2D QuadTree}
-\begin{center}
-\includegraphics[width=0.85\textwidth]{assets/screenshots/2D_demo.png}
-\end{center}
-
-\begin{itemize}
-    \item 2D QuadTree zum besseren Verständnis
-    \item Interaktive Visualisierung
-    \item Schrittweise Demonstration
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Simulation: Verschiedene Szenarien}
-\begin{columns}
-\column{0.5\textwidth}
-\begin{center}
-\textbf{Keplerian Disk}\\[0.3cm]
-\includegraphics[width=\textwidth]{assets/gifs/keplerdisc.gif}
-\end{center}
-
-\column{0.5\textwidth}
-\begin{center}
-\textbf{Big Bang}\\[0.3cm]
-\includegraphics[width=\textwidth]{assets/gifs/bigbang.gif}
-\end{center}
-\end{columns}
+\vspace{1cm}
+{\Large Verschiedene Astrophysik-Szenarien}
 
 \vspace{0.5cm}
 \begin{itemize}
-    \item Realistische Astrophysik-Szenarien
+    \item Keplerian Disk
+    \item Big Bang
+    \item Globular Cluster
+    \item Galaxy Collision
+    \item Black Hole Accretion
     \item Brute Force vs. Barnes-Hut Vergleich
-    \item Echtzeit-Simulation mit einstellbarem $\theta$
+    \item Theta-Parameter live anpassen
 \end{itemize}
+\end{center}
 \end{frame}
 
 \begin{frame}{Performance-Vergleich}
