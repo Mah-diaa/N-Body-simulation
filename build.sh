@@ -21,7 +21,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 
 if [ $? -ne 0 ]; then
     echo ""
-    echo "❌ CMake configuration failed!"
+    echo "CMake configuration failed!"
     echo "Make sure you have CMake and required dependencies installed."
     exit 1
 fi
@@ -33,12 +33,12 @@ make -j$(nproc)
 
 if [ $? -ne 0 ]; then
     echo ""
-    echo "❌ Build failed!"
+    echo "Build failed!"
     exit 1
 fi
 
 echo ""
-echo "✅ Build successful!"
+echo "Build successful!"
 echo ""
 echo "To run the simulation:"
 echo "  cd build"

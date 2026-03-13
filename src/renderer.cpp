@@ -1,10 +1,9 @@
 #include "renderer.h"
 #include <cmath>
-#include <iostream>
-#include <cstddef>  // For size_t on Windows/MSVC
+#include <cstddef>
 
+// Camera controls
 void updateCamera(Camera3D& camera, float& cameraAngleH, float& cameraAngleV, float& cameraDistance) {
-    // EXACT COPY from octree demo - rotation
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         Vector2 mouseDelta = GetMouseDelta();
         cameraAngleH -= mouseDelta.x * 0.01f;
@@ -14,35 +13,31 @@ void updateCamera(Camera3D& camera, float& cameraAngleH, float& cameraAngleV, fl
         if (cameraAngleV > M_PI/2.0f - 0.1f) cameraAngleV = M_PI/2.0f - 0.1f;
     }
 
-    // EXACT COPY from octree demo - zoom
     cameraDistance -= GetMouseWheelMove() * 5.0f;
     if (cameraDistance < 30.0f) cameraDistance = 30.0f;
     if (cameraDistance > 800.0f) cameraDistance = 800.0f;
 
-    // EXACT COPY from octree demo - camera position calculation
     camera.position.x = camera.target.x + cameraDistance * cos(cameraAngleV) * cos(cameraAngleH);
     camera.position.z = camera.target.z + cameraDistance * cos(cameraAngleV) * sin(cameraAngleH);
     camera.position.y = camera.target.y + cameraDistance * sin(cameraAngleV);
 }
 
+// Projectile shooting
 void shootProjectile(std::vector<Particle>& particles, const Camera3D& camera,
                      double speed, double mass) {
     Particle projectile;
 
-    // Start at camera position
     projectile.x = camera.position.x;
     projectile.y = camera.position.y;
     projectile.z = camera.position.z;
     projectile.mass = mass;
 
-    // Calculate direction from camera to target
     Vector3 direction = {
         camera.target.x - camera.position.x,
         camera.target.y - camera.position.y,
         camera.target.z - camera.position.z
     };
 
-    // Normalize direction
     float length = sqrt(direction.x * direction.x +
                       direction.y * direction.y +
                       direction.z * direction.z);
@@ -50,18 +45,16 @@ void shootProjectile(std::vector<Particle>& particles, const Camera3D& camera,
     direction.y /= length;
     direction.z /= length;
 
-    // Set velocity in that direction
     projectile.vx = direction.x * speed;
     projectile.vy = direction.y * speed;
     projectile.vz = direction.z * speed;
 
     particles.push_back(projectile);
-    std::cout << "Projectile launched! Total particles: " << particles.size() << std::endl;
 }
 
+// Trail system
 void updateTrails(const std::vector<Particle>& particles, std::vector<ParticleTrail>& trails,
                  int numStaticParticles) {
-    // Only track trails for static particles (not projectiles)
     for (int i = 0; i < numStaticParticles && i < (int)particles.size(); i++) {
         if (i >= (int)trails.size()) {
             trails.push_back(ParticleTrail(50));
@@ -70,16 +63,13 @@ void updateTrails(const std::vector<Particle>& particles, std::vector<ParticleTr
     }
 }
 
-// Helper function to get color based on position
+// Particle color mapping
 Color getParticleColor(Vector3 pos, const Particle& particle, size_t particleIndex, int numStaticParticles) {
     if (particleIndex >= (size_t)numStaticParticles) {
-        // Projectiles - super bright pink/magenta
         return (Color){255, 100, 255, 255};
     } else if (particle.mass >= 5.0) {
-        // Heavy particles (text, planets) - use custom color
         return particle.color;
     } else {
-        // Light particles - colorful distance-based gradient
         double distance = std::sqrt(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
         float distNorm = std::min(1.0f, (float)distance / 60.0f);
 
@@ -99,18 +89,15 @@ Color getParticleColor(Vector3 pos, const Particle& particle, size_t particleInd
     }
 }
 
+// Particle rendering
 void renderParticles(const std::vector<Particle>& particles, int numStaticParticles,
                     const std::vector<ParticleTrail>& trails, const Camera3D& camera, bool trailsEnabled) {
-    // Draw trails when enabled - colorful trails that match particle colors!
     if (trailsEnabled) {
         for (size_t i = 0; i < (size_t)numStaticParticles && i < particles.size(); i++) {
             if (i < trails.size() && trails[i].positions.size() > 1) {
-                // Draw trail as connected line segments with gradient
                 for (size_t j = 1; j < trails[i].positions.size(); j++) {
-                    // Calculate color based on trail position for rainbow effect
                     Color baseColor = getParticleColor(trails[i].positions[j], particles[i], i, numStaticParticles);
 
-                    // Fade from transparent to full opacity along the trail
                     float alpha = (float)j / trails[i].positions.size();
                     Color trailColor = ColorAlpha(baseColor, alpha * 0.5f);
 
@@ -120,7 +107,6 @@ void renderParticles(const std::vector<Particle>& particles, int numStaticPartic
         }
     }
 
-    // Draw particles using their custom colors and sizes
     for (size_t i = 0; i < particles.size(); i++) {
         Vector3 position = {
             (float)particles[i].x,
@@ -128,34 +114,28 @@ void renderParticles(const std::vector<Particle>& particles, int numStaticPartic
             (float)particles[i].z
         };
 
-        // Get particle color using helper function
         Color particleColor = getParticleColor(position, particles[i], i, numStaticParticles);
 
-        // Determine rendering style
         float radius;
         bool renderAsSphere = false;
 
         if (i >= (size_t)numStaticParticles) {
-            // Projectiles
             radius = 1.2f;
             renderAsSphere = true;
         } else if (particles[i].mass >= 5.0) {
-            // Heavy particles (text, planets)
             renderAsSphere = true;
             radius = particles[i].renderRadius;
         }
 
-        // Draw based on particle type
         if (renderAsSphere) {
-            // Spheres for heavy particles (planets, text, projectiles)
             DrawSphere(position, radius, particleColor);
         } else {
-            // Points for light particles - fast rendering
             DrawPoint3D(position, particleColor);
         }
     }
 }
 
+// HUD overlay
 void renderUI(int particleCount, float cameraDistance, int screenHeight,
               const char* methodName, double theta, int simSpeed, const char* scenarioName,
               int forceCalcs, int rebuildInterval, double softening) {
@@ -169,7 +149,6 @@ void renderUI(int particleCount, float cameraDistance, int screenHeight,
     DrawText(TextFormat("Tree Rebuild: every %d steps", rebuildInterval), 10, 155, 16, ORANGE);
     DrawText(TextFormat("FPS: %d", GetFPS()), 10, 175, 16, GREEN);
 
-    // Show force calculations vs brute force comparison
     int bruteForceCalcs = particleCount * particleCount;
     if (forceCalcs > 0) {
         float savings = 100.0f * (1.0f - (float)forceCalcs / bruteForceCalcs);
@@ -188,21 +167,4 @@ void renderUI(int particleCount, float cameraDistance, int screenHeight,
     DrawText("[/]: Tree rebuild interval", 10, screenHeight - 75, 12, GRAY);
     DrawText("R: Reset", 10, screenHeight - 60, 12, GRAY);
     DrawText("ESC: Exit", 10, screenHeight - 45, 12, GRAY);
-}
-
-void createStaticParticles(std::vector<Particle>& particles, int gridSize,
-                          double spacing, double mass) {
-    for (int ix = 0; ix < gridSize; ix++) {
-        for (int iy = 0; iy < gridSize; iy++) {
-            for (int iz = 0; iz < gridSize; iz++) {
-                Particle p;
-                p.x = (ix - gridSize/2.0) * spacing;
-                p.y = (iy - gridSize/2.0) * spacing;
-                p.z = (iz - gridSize/2.0) * spacing;
-                p.mass = mass;
-                p.vx = p.vy = p.vz = 0.0;
-                particles.push_back(p);
-            }
-        }
-    }
 }

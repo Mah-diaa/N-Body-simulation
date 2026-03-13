@@ -5,7 +5,6 @@
 #include "raylib.h"
 #include <vector>
 
-// Demo visualization modes
 enum AlgorithmDemoMode {
     DEMO_BRUTE_FORCE,
     DEMO_OCTREE_BUILD,
@@ -13,7 +12,6 @@ enum AlgorithmDemoMode {
     DEMO_BARNES_HUT_CALC
 };
 
-// Simple octree node for visualization
 struct VisualOctreeNode {
     double x_center, y_center, z_center;
     double size;
@@ -28,7 +26,18 @@ struct VisualOctreeNode {
     }
 };
 
-// Demo state structure
+struct TraversalStep {
+    int nodeIndex;          // Which node we're evaluating
+    double s;               // Size of the node
+    double d;               // Distance to node center/COM
+    double ratio;           // s/d
+    bool passed;            // Did it pass theta test?
+    bool isLeaf;            // Is this a leaf node?
+    int particleIndex;      // If leaf, which particle (-1 if none)
+    double comX, comY, comZ; // Center of mass position
+    double totalMass;       // Total mass in this node
+};
+
 struct AlgorithmDemoState {
     AlgorithmDemoMode mode;
     std::vector<Particle> allParticles;
@@ -36,26 +45,31 @@ struct AlgorithmDemoState {
     std::vector<VisualOctreeNode> octreeNodes;
     int currentParticleIndex;
     int currentStep;
-    int currentParticle;
     double theta;
     Camera3D camera;
     float cameraAngleH;
     float cameraAngleV;
     float cameraDistance;
+    bool lightMode;
+
+    std::vector<TraversalStep> traversalSteps;
+    int currentTraversalStep;
+    bool traversalComplete;
 
     AlgorithmDemoState();
     void reset();
     void addNextParticle();
     void buildVisualOctree();
     void insertParticleIntoOctree(int nodeIdx, int particleIdx);
+    void buildTraversalSteps();  // Build step-by-step traversal
+    void toggleLightMode() { lightMode = !lightMode; }
+    bool isLightMode() const { return lightMode; }
 };
 
-// Demo control functions
 void initAlgorithmDemo(AlgorithmDemoState& state);
 void updateAlgorithmDemo(AlgorithmDemoState& state);
 void renderAlgorithmDemo(const AlgorithmDemoState& state, int screenWidth, int screenHeight, bool uiVisible = true);
 
-// Helper visualization functions
 void drawOctreeNodeBox(double x, double y, double z, double size, Color color);
 
 #endif // OCTREE_DEMO_H

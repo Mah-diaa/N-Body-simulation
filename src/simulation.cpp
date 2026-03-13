@@ -1,9 +1,10 @@
 #include "simulation.h"
 #include "particle.h"
 #include <cmath>
-#include <cstddef>  // For size_t on Windows/MSVC
+#include <cstddef>
 
 
+// Brute-force N-body force calculation
 void calculateForces(std::vector<Particle> &particles, double G, double softening){
 	    size_t n = particles.size();
     for (size_t i = 0; i < n; ++i) {
@@ -36,6 +37,7 @@ void calculateForces(std::vector<Particle> &particles, double G, double softenin
 }
 }
 
+// Leapfrog integration
 void updateParticles(std::vector<Particle> &particles, double dt){
     for (auto &p : particles) {
 	p.vx += p.ax * dt;
@@ -44,13 +46,6 @@ void updateParticles(std::vector<Particle> &particles, double dt){
 	p.x += p.vx * dt;
 	p.y += p.vy * dt;
 	p.z += p.vz * dt;
-    }
-}
-
-void runSim(std::vector<Particle> &particles, int numsteps, double dt, double G){
-    for (int step = 0; step < numsteps; ++step) {
-	calculateForces(particles, G);
-	updateParticles(particles, dt);
     }
 }
 
